@@ -1,0 +1,6 @@
+swagger:
+  enabled: true
+
+logging:
+  file:
+    path: C:/Users/11245/Documents/logs

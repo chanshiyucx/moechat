@@ -1,0 +1,6 @@
+swagger:
+  enabled: false
+
+logging:
+  file:
+    path: /var/logs

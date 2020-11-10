@@ -2,8 +2,7 @@ package com.chanshiyu.chat;
 
 import com.chanshiyu.chat.codec.Splitter;
 import com.chanshiyu.chat.handler.AuthHandler;
-import com.chanshiyu.chat.handler.request.LoginRequestHandler;
-import com.chanshiyu.chat.handler.request.MessageRequestHandler;
+import com.chanshiyu.chat.handler.request.*;
 import com.chanshiyu.chat.handler.request.SocketPacketCodecHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -43,8 +42,10 @@ public class NettySocketServer {
                         ch.pipeline().addLast(new Splitter());
                         ch.pipeline().addLast(new SocketPacketCodecHandler());
                         ch.pipeline().addLast(new LoginRequestHandler());
+                        ch.pipeline().addLast(new LogoutRequestHandler());
                         ch.pipeline().addLast(new AuthHandler());
                         ch.pipeline().addLast(new MessageRequestHandler());
+                        ch.pipeline().addLast(new CreateGroupRequestHandler());
 
 //                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
 //                        ch.pipeline().addLast(LoginRequestHandler.INSTANCE);

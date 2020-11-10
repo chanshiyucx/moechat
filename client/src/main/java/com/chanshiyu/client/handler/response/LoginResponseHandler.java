@@ -13,16 +13,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class LoginResponseHandler extends SimpleChannelInboundHandler<LoginResponsePacket> {
 
-//    public static final LoginResponseHandler INSTANCE = new LoginResponseHandler();
-//
-//    private LoginResponseHandler() {
-//    }
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, LoginResponsePacket loginResponsePacket) {
         long userId = loginResponsePacket.getUserId();
         String userName = loginResponsePacket.getUsername();
-
         if (loginResponsePacket.isSuccess()) {
             System.out.println("[" + userName + "]登录成功，userId 为: " + loginResponsePacket.getUserId());
             SessionUtil.bindSession(new Session(userId, userName), ctx.channel());

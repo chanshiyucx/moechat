@@ -11,11 +11,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class MessageResponseHandler extends SimpleChannelInboundHandler<MessageResponsePacket> {
 
-//    public static final MessageResponseHandler INSTANCE = new MessageResponseHandler();
-//
-//    private MessageResponseHandler() {
-//    }
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, MessageResponsePacket messageResponsePacket) {
         long fromUserId = messageResponsePacket.getFromUserId();

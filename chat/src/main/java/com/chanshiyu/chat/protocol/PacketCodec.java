@@ -1,9 +1,13 @@
 package com.chanshiyu.chat.protocol;
 
 import com.chanshiyu.chat.protocol.command.Command;
+import com.chanshiyu.chat.protocol.request.CreateGroupRequestPacket;
 import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
+import com.chanshiyu.chat.protocol.request.LogoutRequestPacket;
 import com.chanshiyu.chat.protocol.request.MessageRequestPacket;
+import com.chanshiyu.chat.protocol.response.CreateGroupResponsePacket;
 import com.chanshiyu.chat.protocol.response.LoginResponsePacket;
+import com.chanshiyu.chat.protocol.response.LogoutResponsePacket;
 import com.chanshiyu.chat.protocol.response.MessageResponsePacket;
 import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
@@ -35,9 +39,15 @@ public class PacketCodec {
         // 登陆
         packetTypeMap.put(Command.LOGIN_REQUEST, LoginRequestPacket.class);
         packetTypeMap.put(Command.LOGIN_RESPONSE, LoginResponsePacket.class);
+        // 登出
+        packetTypeMap.put(Command.LOGOUT_REQUEST, LogoutRequestPacket.class);
+        packetTypeMap.put(Command.LOGOUT_RESPONSE, LogoutResponsePacket.class);
         // 消息
         packetTypeMap.put(Command.MESSAGE_REQUEST, MessageRequestPacket.class);
         packetTypeMap.put(Command.MESSAGE_RESPONSE, MessageResponsePacket.class);
+        // 消息
+        packetTypeMap.put(Command.CREATE_GROUP_REQUEST, CreateGroupRequestPacket.class);
+        packetTypeMap.put(Command.CREATE_GROUP_RESPONSE, CreateGroupResponsePacket.class);
 
         serializerMap = new HashMap<>();
         Serializer serializer = new JSONSerializer();

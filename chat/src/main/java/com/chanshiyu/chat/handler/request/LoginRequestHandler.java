@@ -3,12 +3,12 @@ package com.chanshiyu.chat.handler.request;
 import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
 import com.chanshiyu.chat.protocol.response.LoginResponsePacket;
 import com.chanshiyu.chat.session.Session;
+import com.chanshiyu.chat.util.IDUtil;
 import com.chanshiyu.chat.util.SessionUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.Date;
-import java.util.Random;
 
 /**
  * @author SHIYU
@@ -30,7 +30,7 @@ public class LoginRequestHandler extends SimpleChannelInboundHandler<LoginReques
 
         if (valid(loginRequestPacket)) {
             loginResponsePacket.setSuccess(true);
-            long userId = randomUserId();
+            long userId = IDUtil.randomId();
             loginResponsePacket.setUserId(userId);
             System.out.println("[" + loginRequestPacket.getUsername() + "]登录成功");
             SessionUtil.bindSession(new Session(userId, loginRequestPacket.getUsername()), ctx.channel());
@@ -44,10 +44,6 @@ public class LoginRequestHandler extends SimpleChannelInboundHandler<LoginReques
 
     private boolean valid(LoginRequestPacket loginRequestPacket) {
         return true;
-    }
-
-    private static long randomUserId() {
-        return new Random().nextLong();
     }
 
     @Override

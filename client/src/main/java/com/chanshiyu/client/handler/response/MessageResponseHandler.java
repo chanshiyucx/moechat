@@ -4,8 +4,6 @@ import com.chanshiyu.chat.protocol.response.MessageResponsePacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-import java.util.Date;
-
 /**
  * @author SHIYU
  * @description
@@ -13,13 +11,17 @@ import java.util.Date;
  */
 public class MessageResponseHandler extends SimpleChannelInboundHandler<MessageResponsePacket> {
 
-    public static final MessageResponseHandler INSTANCE = new MessageResponseHandler();
-
-    private MessageResponseHandler() {}
+//    public static final MessageResponseHandler INSTANCE = new MessageResponseHandler();
+//
+//    private MessageResponseHandler() {
+//    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, MessageResponsePacket messageResponsePacket) {
-        System.out.println(new Date() + ": 收到服务端的消息: " + messageResponsePacket.getMessage());
+        long fromUserId = messageResponsePacket.getFromUserId();
+        String fromUserName = messageResponsePacket.getFromUsername();
+        System.out.println(fromUserId + ":" + fromUserName + " -> " + messageResponsePacket
+                .getMessage());
     }
 
 }

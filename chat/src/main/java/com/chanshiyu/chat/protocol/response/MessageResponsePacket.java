@@ -14,6 +14,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class MessageResponsePacket extends Packet {
 
+    private long fromUserId;
+
+    private String fromUsername;
+
     private int index;
 
     private String message;

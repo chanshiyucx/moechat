@@ -2,7 +2,9 @@ package com.chanshiyu.client;
 
 import com.chanshiyu.chat.codec.Splitter;
 import com.chanshiyu.chat.handler.request.SocketPacketCodecHandler;
+import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
 import com.chanshiyu.chat.protocol.request.MessageRequestPacket;
+import com.chanshiyu.chat.util.SessionUtil;
 import com.chanshiyu.client.handler.response.LoginResponseHandler;
 import com.chanshiyu.client.handler.response.MessageResponseHandler;
 import io.netty.bootstrap.Bootstrap;
@@ -44,9 +46,12 @@ public class NettyClient {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
-                        ch.pipeline().addLast(LoginResponseHandler.INSTANCE);
-                        ch.pipeline().addLast(MessageResponseHandler.INSTANCE);
+                        ch.pipeline().addLast(new SocketPacketCodecHandler());
+                        ch.pipeline().addLast(new LoginResponseHandler());
+                        ch.pipeline().addLast(new MessageResponseHandler());
+//                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
+//                        ch.pipeline().addLast(LoginResponseHandler.INSTANCE);
+//                        ch.pipeline().addLast(MessageResponseHandler.INSTANCE);
                     }
                 });
         connect(bootstrap, HOST, PORT, MAX_RETRY);
@@ -55,7 +60,7 @@ public class NettyClient {
     private static void connect(Bootstrap bootstrap, String host, int port, int retry) {
         bootstrap.connect(host, port).addListener(future -> {
             if (future.isSuccess()) {
-                System.out.println(new Date() + ": 连接成功!启动控制台线程……");
+                System.out.println(new Date() + ": 连接成功，启动控制台线程……");
                 Channel channel = ((ChannelFuture) future).channel();
                 startConsoleThread(channel);
             } else if (retry == 0) {
@@ -73,16 +78,28 @@ public class NettyClient {
     }
 
     private static void startConsoleThread(Channel channel) {
+        Scanner sc = new Scanner(System.in);
         new Thread(() -> {
             while (!Thread.interrupted()) {
-                System.out.println("输入消息发送至服务端: ");
-                Scanner sc = new Scanner(System.in);
-                String line = sc.nextLine();
-                MessageRequestPacket packet = new MessageRequestPacket();
-                packet.setMessage(line);
-                channel.writeAndFlush(packet);
+                if (!SessionUtil.hasLogin(channel)) {
+                    System.out.print("输入用户名登录: ");
+                    String username = sc.nextLine();
+                    channel.writeAndFlush(new LoginRequestPacket(username, "pwd"));
+                    waitForLoginResponse();
+                } else {
+                    long toUserId = sc.nextLong();
+                    String message = sc.next();
+                    channel.writeAndFlush(new MessageRequestPacket(toUserId, 1, message));
+                }
             }
         }).start();
+    }
+
+    private static void waitForLoginResponse() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
     }
 
 }

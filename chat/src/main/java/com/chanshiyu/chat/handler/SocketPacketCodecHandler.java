@@ -14,10 +14,10 @@ import java.util.List;
  * @since 2020/11/10 9:08
  */
 public class SocketPacketCodecHandler extends MessageToMessageCodec<ByteBuf, Packet> {
-
-    public static final SocketPacketCodecHandler INSTANCE = new SocketPacketCodecHandler();
-
-    private SocketPacketCodecHandler() {}
+//
+//    public static final SocketPacketCodecHandler INSTANCE = new SocketPacketCodecHandler();
+//
+//    private SocketPacketCodecHandler() {}
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {

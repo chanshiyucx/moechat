@@ -1,12 +1,10 @@
 package com.chanshiyu.client.handler.response;
 
-import com.chanshiyu.chat.handler.request.SocketPacketCodecHandler;
-import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
 import com.chanshiyu.chat.protocol.response.LoginResponsePacket;
+import com.chanshiyu.chat.session.Session;
+import com.chanshiyu.chat.util.SessionUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-
-import java.util.Date;
 
 /**
  * @author SHIYU
@@ -15,27 +13,27 @@ import java.util.Date;
  */
 public class LoginResponseHandler extends SimpleChannelInboundHandler<LoginResponsePacket> {
 
-    public static final LoginResponseHandler INSTANCE = new LoginResponseHandler();
-
-    private LoginResponseHandler() {}
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        // 创建登录对象
-        LoginRequestPacket loginRequestPacket = new LoginRequestPacket();
-        loginRequestPacket.setUserId(123456);
-        loginRequestPacket.setUsername("shiyu");
-        // 写数据
-        ctx.channel().writeAndFlush(loginRequestPacket);
-    }
+//    public static final LoginResponseHandler INSTANCE = new LoginResponseHandler();
+//
+//    private LoginResponseHandler() {
+//    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, LoginResponsePacket loginResponsePacket) {
+        long userId = loginResponsePacket.getUserId();
+        String userName = loginResponsePacket.getUsername();
+
         if (loginResponsePacket.isSuccess()) {
-            System.out.println(new Date() + ": 客户端登录成功");
+            System.out.println("[" + userName + "]登录成功，userId 为: " + loginResponsePacket.getUserId());
+            SessionUtil.bindSession(new Session(userId, userName), ctx.channel());
         } else {
-            System.out.println(new Date() + ": 客户端登录失败，原因：" + loginResponsePacket.getMessage());
+            System.out.println("[" + userName + "]登录失败，原因：" + loginResponsePacket.getMessage());
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("客户端连接被关闭!");
     }
 
 }

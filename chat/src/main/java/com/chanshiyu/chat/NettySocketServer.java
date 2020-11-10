@@ -41,10 +41,15 @@ public class NettySocketServer {
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
                         ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
-                        ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
-                        ch.pipeline().addLast(AuthHandler.INSTANCE);
-                        ch.pipeline().addLast(MessageRequestHandler.INSTANCE);
+                        ch.pipeline().addLast(new SocketPacketCodecHandler());
+                        ch.pipeline().addLast(new LoginRequestHandler());
+                        ch.pipeline().addLast(new AuthHandler());
+                        ch.pipeline().addLast(new MessageRequestHandler());
+
+//                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
+//                        ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
+//                        ch.pipeline().addLast(AuthHandler.INSTANCE);
+//                        ch.pipeline().addLast(MessageRequestHandler.INSTANCE);
 //                        ch.pipeline().addLast(new SocketChannelInitializer());
                     }
                 });

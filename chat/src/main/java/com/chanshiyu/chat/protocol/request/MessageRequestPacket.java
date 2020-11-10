@@ -2,6 +2,7 @@ package com.chanshiyu.chat.protocol.request;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +13,10 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class MessageRequestPacket extends Packet {
+
+    private long toUserId;
 
     private int index;
 

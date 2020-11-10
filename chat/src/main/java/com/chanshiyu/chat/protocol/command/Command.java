@@ -19,4 +19,9 @@ public interface Command {
     byte LOGIN_REQUEST = 3;
     byte LOGIN_RESPONSE = 4;
 
+    /**
+     * 消息
+     */
+    byte MESSAGE_REQUEST = 5;
+    byte MESSAGE_RESPONSE = 6;
 }

@@ -51,10 +51,6 @@ jwt:
   secret: moechat-secret
   expiration: 604800
 
-disruptor:
-  buffer:
-    size: 1048576
-
 swagger:
   title: Moechat
   description: Moe moe chat!

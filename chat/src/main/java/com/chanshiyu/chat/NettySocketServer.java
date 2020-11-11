@@ -13,16 +13,16 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
 
 /**
  * @author SHIYU
  * @description Netty 服务端
  * @since 2020/11/9 15:47
  */
+@Slf4j
 @Component
 public class NettySocketServer {
 
@@ -57,9 +57,9 @@ public class NettySocketServer {
     private static void bind(final ServerBootstrap serverBootstrap, final int port) {
         serverBootstrap.bind(port).addListener(future -> {
             if (future.isSuccess()) {
-                System.out.println(new Date() + ": 端口[" + port + "]绑定成功!");
+                log.info("端口[{}]绑定成功!", port);
             } else {
-                System.err.println("端口[" + port + "]绑定失败!");
+                log.error("端口[{}]绑定失败!", port);
             }
         });
     }

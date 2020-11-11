@@ -1,23 +1,20 @@
 package com.chanshiyu.chat.handler.request;
 
+import com.chanshiyu.chat.handler.DisruptorRequestHandler;
 import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
-import com.chanshiyu.chat.protocol.response.LoginResponsePacket;
-import com.chanshiyu.chat.session.Session;
-import com.chanshiyu.chat.util.IDUtil;
 import com.chanshiyu.chat.util.SessionUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
-import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author SHIYU
  * @description
  * @since 2020/11/10 9:00
  */
+@Slf4j
 @ChannelHandler.Sharable
-public class LoginRequestHandler extends SimpleChannelInboundHandler<LoginRequestPacket> {
+public class LoginRequestHandler extends DisruptorRequestHandler<LoginRequestPacket> {
 
     public static final LoginRequestHandler INSTANCE = new LoginRequestHandler();
 
@@ -25,32 +22,15 @@ public class LoginRequestHandler extends SimpleChannelInboundHandler<LoginReques
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) {
-        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();
-        loginResponsePacket.setVersion(loginRequestPacket.getVersion());
-        loginResponsePacket.setUsername(loginRequestPacket.getUsername());
-
-        if (valid(loginRequestPacket)) {
-            loginResponsePacket.setSuccess(true);
-            long userId = IDUtil.randomId();
-            loginResponsePacket.setUserId(userId);
-            System.out.println("[" + loginRequestPacket.getUsername() + "]登录成功");
-            SessionUtil.bindSession(new Session(userId, loginRequestPacket.getUsername()), ctx.channel());
-        } else {
-            loginResponsePacket.setMessage("账号密码校验失败");
-            loginResponsePacket.setSuccess(false);
-            System.out.println(new Date() + ": 登录失败!");
-        }
-        ctx.writeAndFlush(loginResponsePacket);
-    }
-
-    private boolean valid(LoginRequestPacket loginRequestPacket) {
-        return true;
+    public void channelInactive(ChannelHandlerContext ctx) {
+        SessionUtil.unBindSession(ctx.channel());
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-        SessionUtil.unBindSession(ctx.channel());
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.channel().close();
+        log.info("因通信异常，服务器主动关闭IM");
     }
 
 }

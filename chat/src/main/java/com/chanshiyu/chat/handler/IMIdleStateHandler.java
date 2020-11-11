@@ -3,6 +3,7 @@ package com.chanshiyu.chat.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @description
  * @since 2020/11/11 11:19
  */
+@Slf4j
 public class IMIdleStateHandler extends IdleStateHandler {
 
     private static final int READER_IDLE_TIME = 60;
@@ -21,7 +23,7 @@ public class IMIdleStateHandler extends IdleStateHandler {
 
     @Override
     protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) {
-        System.out.println(READER_IDLE_TIME + "秒内未读到数据，关闭连接");
+        log.info("{} 秒内未读到数据，关闭连接", READER_IDLE_TIME);
         ctx.channel().close();
     }
 

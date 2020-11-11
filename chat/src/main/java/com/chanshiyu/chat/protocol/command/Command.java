@@ -31,7 +31,7 @@ public interface Command {
     byte MESSAGE_RESPONSE = 8;
 
     /**
-     * 群聊
+     * 创建群聊
      */
     byte CREATE_GROUP_REQUEST = 9;
     byte CREATE_GROUP_RESPONSE = 10;

@@ -1,8 +1,9 @@
-package com.chanshiyu.chat.handler.request;
+package com.chanshiyu.chat.codec;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.PacketCodec;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 
@@ -13,11 +14,12 @@ import java.util.List;
  * @description
  * @since 2020/11/10 9:08
  */
-public class SocketPacketCodecHandler extends MessageToMessageCodec<ByteBuf, Packet> {
-//
-//    public static final SocketPacketCodecHandler INSTANCE = new SocketPacketCodecHandler();
-//
-//    private SocketPacketCodecHandler() {}
+@ChannelHandler.Sharable
+public class PacketCodecHandler extends MessageToMessageCodec<ByteBuf, Packet> {
+
+    public static final PacketCodecHandler INSTANCE = new PacketCodecHandler();
+
+    private PacketCodecHandler() {}
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {

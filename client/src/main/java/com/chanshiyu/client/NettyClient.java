@@ -1,14 +1,13 @@
 package com.chanshiyu.client;
 
+import com.chanshiyu.chat.codec.PacketCodecHandler;
 import com.chanshiyu.chat.codec.Splitter;
-import com.chanshiyu.chat.handler.request.SocketPacketCodecHandler;
+import com.chanshiyu.chat.handler.IMIdleStateHandler;
 import com.chanshiyu.chat.util.SessionUtil;
 import com.chanshiyu.client.console.ConsoleCommandManager;
 import com.chanshiyu.client.console.LoginConsoleCommand;
-import com.chanshiyu.client.handler.response.CreateGroupResponseHandler;
-import com.chanshiyu.client.handler.response.LoginResponseHandler;
-import com.chanshiyu.client.handler.response.LogoutResponseHandler;
-import com.chanshiyu.client.handler.response.MessageResponseHandler;
+import com.chanshiyu.client.handler.HeartBeatTimerHandler;
+import com.chanshiyu.client.handler.response.*;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -47,12 +46,19 @@ public class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(new SocketPacketCodecHandler());
+                        ch.pipeline().addLast(PacketCodecHandler.INSTANCE);
+                        ch.pipeline().addLast(new HeartBeatTimerHandler());
                         ch.pipeline().addLast(new LoginResponseHandler());
                         ch.pipeline().addLast(new LogoutResponseHandler());
                         ch.pipeline().addLast(new MessageResponseHandler());
                         ch.pipeline().addLast(new CreateGroupResponseHandler());
+                        ch.pipeline().addLast(new JoinGroupResponseHandler());
+                        ch.pipeline().addLast(new QuitGroupResponseHandler());
+                        ch.pipeline().addLast(new ListGroupMembersResponseHandler());
+                        ch.pipeline().addLast(new GroupMessageResponseHandler());
+                        ch.pipeline().addLast(new HeartBeatResponseHandler());
                     }
                 });
         connect(bootstrap, HOST, PORT, MAX_RETRY);

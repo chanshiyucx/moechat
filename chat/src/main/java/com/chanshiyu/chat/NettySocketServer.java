@@ -1,9 +1,12 @@
 package com.chanshiyu.chat;
 
+import com.chanshiyu.chat.codec.PacketCodecHandler;
 import com.chanshiyu.chat.codec.Splitter;
 import com.chanshiyu.chat.handler.AuthHandler;
-import com.chanshiyu.chat.handler.request.*;
-import com.chanshiyu.chat.handler.request.SocketPacketCodecHandler;
+import com.chanshiyu.chat.handler.IMHandler;
+import com.chanshiyu.chat.handler.IMIdleStateHandler;
+import com.chanshiyu.chat.handler.request.HeartBeatRequestHandler;
+import com.chanshiyu.chat.handler.request.LoginRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -39,19 +42,13 @@ public class NettySocketServer {
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(new SocketPacketCodecHandler());
-                        ch.pipeline().addLast(new LoginRequestHandler());
-                        ch.pipeline().addLast(new LogoutRequestHandler());
-                        ch.pipeline().addLast(new AuthHandler());
-                        ch.pipeline().addLast(new MessageRequestHandler());
-                        ch.pipeline().addLast(new CreateGroupRequestHandler());
-
-//                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
-//                        ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
-//                        ch.pipeline().addLast(AuthHandler.INSTANCE);
-//                        ch.pipeline().addLast(MessageRequestHandler.INSTANCE);
-//                        ch.pipeline().addLast(new SocketChannelInitializer());
+                        ch.pipeline().addLast(PacketCodecHandler.INSTANCE);
+                        ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
+                        ch.pipeline().addLast(HeartBeatRequestHandler.INSTANCE);
+                        ch.pipeline().addLast(AuthHandler.INSTANCE);
+                        ch.pipeline().addLast(IMHandler.INSTANCE);
                     }
                 });
         bind(serverBootstrap, port);

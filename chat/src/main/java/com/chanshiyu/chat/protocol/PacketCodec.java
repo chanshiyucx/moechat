@@ -1,14 +1,8 @@
 package com.chanshiyu.chat.protocol;
 
 import com.chanshiyu.chat.protocol.command.Command;
-import com.chanshiyu.chat.protocol.request.CreateGroupRequestPacket;
-import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
-import com.chanshiyu.chat.protocol.request.LogoutRequestPacket;
-import com.chanshiyu.chat.protocol.request.MessageRequestPacket;
-import com.chanshiyu.chat.protocol.response.CreateGroupResponsePacket;
-import com.chanshiyu.chat.protocol.response.LoginResponsePacket;
-import com.chanshiyu.chat.protocol.response.LogoutResponsePacket;
-import com.chanshiyu.chat.protocol.response.MessageResponsePacket;
+import com.chanshiyu.chat.protocol.request.*;
+import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import io.netty.buffer.ByteBuf;
@@ -34,8 +28,8 @@ public class PacketCodec {
     static {
         packetTypeMap = new HashMap<>();
         // 心跳
-//        packetTypeMap.put(Command.HEARTBEAT_REQUEST, HeartBeatRequestPacket.class);
-//        packetTypeMap.put(Command.HEARTBEAT_RESPONSE, HeartBeatResponsePacket.class);
+        packetTypeMap.put(Command.HEARTBEAT_REQUEST, HeartBeatRequestPacket.class);
+        packetTypeMap.put(Command.HEARTBEAT_RESPONSE, HeartBeatResponsePacket.class);
         // 登陆
         packetTypeMap.put(Command.LOGIN_REQUEST, LoginRequestPacket.class);
         packetTypeMap.put(Command.LOGIN_RESPONSE, LoginResponsePacket.class);
@@ -45,9 +39,21 @@ public class PacketCodec {
         // 消息
         packetTypeMap.put(Command.MESSAGE_REQUEST, MessageRequestPacket.class);
         packetTypeMap.put(Command.MESSAGE_RESPONSE, MessageResponsePacket.class);
-        // 消息
+        // 创建群聊
         packetTypeMap.put(Command.CREATE_GROUP_REQUEST, CreateGroupRequestPacket.class);
         packetTypeMap.put(Command.CREATE_GROUP_RESPONSE, CreateGroupResponsePacket.class);
+        // 加入群聊
+        packetTypeMap.put(Command.JOIN_GROUP_REQUEST, JoinGroupRequestPacket.class);
+        packetTypeMap.put(Command.JOIN_GROUP_RESPONSE, JoinGroupResponsePacket.class);
+        // 退出群聊
+        packetTypeMap.put(Command.QUIT_GROUP_REQUEST, QuitGroupRequestPacket.class);
+        packetTypeMap.put(Command.QUIT_GROUP_RESPONSE, QuitGroupResponsePacket.class);
+        // 群聊成员
+        packetTypeMap.put(Command.LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestPacket.class);
+        packetTypeMap.put(Command.LIST_GROUP_MEMBERS_RESPONSE, ListGroupMembersResponsePacket.class);
+        // 群聊消息
+        packetTypeMap.put(Command.GROUP_MESSAGE_REQUEST, GroupMessageRequestPacket.class);
+        packetTypeMap.put(Command.GROUP_MESSAGE_RESPONSE, GroupMessageResponsePacket.class);
 
         serializerMap = new HashMap<>();
         Serializer serializer = new JSONSerializer();

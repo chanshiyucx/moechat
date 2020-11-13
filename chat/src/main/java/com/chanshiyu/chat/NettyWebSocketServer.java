@@ -1,32 +1,31 @@
 package com.chanshiyu.chat;
 
-import com.chanshiyu.chat.handler.SocketPacketCodecHandler;
-import com.chanshiyu.chat.codec.Splitter;
-import com.chanshiyu.chat.handler.AuthHandler;
-import com.chanshiyu.chat.handler.IMHandler;
-import com.chanshiyu.chat.handler.IMIdleStateHandler;
+import com.chanshiyu.chat.handler.*;
 import com.chanshiyu.chat.handler.request.HeartBeatRequestHandler;
 import com.chanshiyu.chat.handler.request.LoginRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
  * @author SHIYU
- * @description Socket 服务端
- * @since 2020/11/9 15:47
+ * @description Websocket 服务端
+ * @since 2020/11/13 11:00
  */
 @Slf4j
 @Component
-public class NettySocketServer {
+public class NettyWebSocketServer {
 
-    @Value("${netty.socket.port}")
+    @Value("${netty.websocket.port}")
     private int port;
 
     public void run() {
@@ -37,14 +36,14 @@ public class NettySocketServer {
         serverBootstrap
                 .group(boosGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast(new HttpServerCodec());
+                        ch.pipeline().addLast(new ChunkedWriteHandler());
+                        ch.pipeline().addLast(new HttpObjectAggregator(1024 * 64));
                         ch.pipeline().addLast(new IMIdleStateHandler());
-                        ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
+                        ch.pipeline().addLast(new WebSocketServerProtocolHandler("/chat"));
+                        ch.pipeline().addLast(WebSocketPacketCodecHandler.INSTANCE);
                         ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
                         ch.pipeline().addLast(HeartBeatRequestHandler.INSTANCE);
                         ch.pipeline().addLast(AuthHandler.INSTANCE);
@@ -57,9 +56,9 @@ public class NettySocketServer {
     private static void bind(final ServerBootstrap serverBootstrap, final int port) {
         serverBootstrap.bind(port).addListener(future -> {
             if (future.isSuccess()) {
-                log.info("socket 端口[{}]绑定成功!", port);
+                log.info("websocket 端口[{}]绑定成功!", port);
             } else {
-                log.error("socket 端口[{}]绑定失败!", port);
+                log.error("websocket 端口[{}]绑定失败!", port);
             }
         });
     }

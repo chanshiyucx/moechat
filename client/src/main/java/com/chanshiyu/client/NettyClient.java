@@ -1,6 +1,6 @@
 package com.chanshiyu.client;
 
-import com.chanshiyu.chat.codec.PacketCodecHandler;
+import com.chanshiyu.chat.handler.SocketPacketCodecHandler;
 import com.chanshiyu.chat.codec.Splitter;
 import com.chanshiyu.chat.handler.IMIdleStateHandler;
 import com.chanshiyu.chat.util.SessionUtil;
@@ -48,7 +48,7 @@ public class NettyClient {
                     public void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Splitter());
-                        ch.pipeline().addLast(PacketCodecHandler.INSTANCE);
+                        ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);
                         ch.pipeline().addLast(new HeartBeatTimerHandler());
                         ch.pipeline().addLast(new LoginResponseHandler());
                         ch.pipeline().addLast(new LogoutResponseHandler());

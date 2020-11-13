@@ -32,7 +32,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChannelHandlerContext ctx = wrapper.getCtx();
         byte command = packet.getCommand();
         Channel channel = ctx.channel();
-        log.info("消费消息：{}", command);
+        // log.info("消费消息：{}", command);
         switch (command) {
             case Command.LOGIN_REQUEST:
                 login(channel, (LoginRequestPacket) packet);

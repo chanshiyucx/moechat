@@ -1,4 +1,4 @@
-package com.chanshiyu.chat.codec;
+package com.chanshiyu.chat.handler;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.PacketCodec;
@@ -6,31 +6,32 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.util.List;
 
 /**
  * @author SHIYU
  * @description
- * @since 2020/11/10 9:08
+ * @since 2020/11/13 11:14
  */
 @ChannelHandler.Sharable
-public class PacketCodecHandler extends MessageToMessageCodec<ByteBuf, Packet> {
+public class WebSocketPacketCodecHandler extends MessageToMessageCodec<TextWebSocketFrame, Packet> {
 
-    public static final PacketCodecHandler INSTANCE = new PacketCodecHandler();
+    public static final WebSocketPacketCodecHandler INSTANCE = new WebSocketPacketCodecHandler();
 
-    private PacketCodecHandler() {}
+    private WebSocketPacketCodecHandler() {}
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {
-        out.add(PacketCodec.INSTANCE.decode(byteBuf));
+    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame msg, List<Object> out) {
+        out.add(PacketCodec.INSTANCE.decode(msg.content()));
     }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) {
         ByteBuf byteBuf = ctx.channel().alloc().ioBuffer();
         PacketCodec.INSTANCE.encode(byteBuf, packet);
-        out.add(byteBuf);
+        out.add(new TextWebSocketFrame(byteBuf));
     }
 
 }

@@ -14,13 +14,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class DisruptorRequestHandler<T extends Packet> extends SimpleChannelInboundHandler<T> {
 
-    public RingBufferWorkerPoolFactory getWorkerPoolFactory() {
-        return SpringUtil.getBean(RingBufferWorkerPoolFactory.class);
-    }
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, T msg) {
-        MessageProducer messageProducer = getWorkerPoolFactory().getMessageProducer(msg.getCommand());
+        RingBufferWorkerPoolFactory factory = SpringUtil.getBean(RingBufferWorkerPoolFactory.class);
+        MessageProducer messageProducer = factory.getMessageProducer(msg.getCommand());
         messageProducer.publish(msg, ctx);
     }
 

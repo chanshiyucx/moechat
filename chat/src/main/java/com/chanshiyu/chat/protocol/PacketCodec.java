@@ -9,7 +9,6 @@ import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import com.chanshiyu.common.util.CryptoAesUtil;
 import io.netty.buffer.ByteBuf;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,9 +65,9 @@ public class PacketCodec {
     public void encode(ByteBuf byteBuf, Packet packet) throws Exception {
         // 1. 序列化 java 对象
         byte[] bytes = Serializer.DEFAULT.serialize(packet);
-        System.out.println("encode bytes: " + new String(bytes));
+        // 2. 数据包加密
         bytes = CryptoAesUtil.encrypt(bytes, CryptoAttributes.DEFAULT_KEY, CryptoAttributes.DEFAULT_IV);
-        // 2. 实际编码过程
+        // 3. 实际编码过程
         byteBuf.writeInt(MAGIC_NUMBER)
                 .writeByte(packet.getVersion())
                 .writeByte(Serializer.DEFAULT.getSerializerAlgorithm())

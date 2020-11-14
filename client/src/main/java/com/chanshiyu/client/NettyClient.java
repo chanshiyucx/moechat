@@ -16,7 +16,9 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.security.Security;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -35,8 +37,10 @@ public class NettyClient {
     private static final int PORT = 8001;
 
     public static void main(String[] args) {
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
+        // 导入支持AES/CBC/PKCS7Padding的Provider
+        Security.addProvider(new BouncyCastleProvider());
 
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup)
                 .channel(NioSocketChannel.class)

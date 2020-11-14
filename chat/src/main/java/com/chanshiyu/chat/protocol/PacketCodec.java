@@ -1,12 +1,15 @@
 package com.chanshiyu.chat.protocol;
 
+import com.chanshiyu.chat.attribute.CryptoAttributes;
 import com.chanshiyu.chat.protocol.command.Command;
 import com.chanshiyu.chat.protocol.request.*;
 import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
+import com.chanshiyu.common.util.CryptoAesUtil;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,9 +63,11 @@ public class PacketCodec {
         serializerMap.put(serializer.getSerializerAlgorithm(), serializer);
     }
 
-    public void encode(ByteBuf byteBuf, Packet packet) {
+    public void encode(ByteBuf byteBuf, Packet packet) throws Exception {
         // 1. 序列化 java 对象
         byte[] bytes = Serializer.DEFAULT.serialize(packet);
+        System.out.println("encode bytes: " + new String(bytes));
+        bytes = CryptoAesUtil.encrypt(bytes, CryptoAttributes.DEFAULT_KEY, CryptoAttributes.DEFAULT_IV);
         // 2. 实际编码过程
         byteBuf.writeInt(MAGIC_NUMBER)
                 .writeByte(packet.getVersion())
@@ -72,7 +77,7 @@ public class PacketCodec {
                 .writeBytes(bytes);
     }
 
-    public Packet decode(ByteBuf byteBuf) {
+    public Packet decode(ByteBuf byteBuf) throws Exception {
         // 跳过 magic number
         byteBuf.skipBytes(4);
         // 跳过版本号
@@ -85,6 +90,7 @@ public class PacketCodec {
         int length = byteBuf.readInt();
         byte[] bytes = new byte[length];
         byteBuf.readBytes(bytes);
+        bytes = CryptoAesUtil.decrypt(bytes, CryptoAttributes.DEFAULT_KEY, CryptoAttributes.DEFAULT_IV);
         Class<? extends Packet> requestType = getRequestType(command);
         Serializer serializer = getSerializer(serializeAlgorithm);
         if (requestType != null && serializer != null) {

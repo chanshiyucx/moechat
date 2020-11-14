@@ -23,7 +23,7 @@ public class MessageProducer {
     private RingBuffer<TranslatorDataWrapper> ringBuffer;
 
     public void publish(Packet packet, ChannelHandlerContext ctx) {
-        // log.info("发布消息：{}", packet.getCommand());
+         log.info("发布消息：{}", packet.getCommand());
         long sequence = ringBuffer.next();
         try {
             TranslatorDataWrapper wrapper = ringBuffer.get(sequence);

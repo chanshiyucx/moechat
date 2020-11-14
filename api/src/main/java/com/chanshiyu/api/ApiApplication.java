@@ -3,12 +3,15 @@ package com.chanshiyu.api;
 import com.chanshiyu.chat.disruptor.RingBufferWorkerPoolFactory;
 import com.chanshiyu.chat.disruptor.consumer.MessageConsumer;
 import com.chanshiyu.common.util.SpringUtil;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.security.Security;
 
 /**
  * @author SHIYU
@@ -28,6 +31,9 @@ public class ApiApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ApiApplication.class, args);
+
+        // 导入支持AES/CBC/PKCS7Padding的Provider
+        Security.addProvider(new BouncyCastleProvider());
 
         // 启动 disruptor
         MessageConsumer[] consumers = new MessageConsumer[16];

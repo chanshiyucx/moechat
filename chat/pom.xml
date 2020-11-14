@@ -13,6 +13,7 @@
     <properties>
         <netty.version>4.1.50.Final</netty.version>
         <disruptor.version>3.4.2</disruptor.version>
+        <bcprov.version>1.46</bcprov.version>
     </properties>
 
     <dependencies>
@@ -32,6 +33,12 @@
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
             <version>${disruptor.version}</version>
+        </dependency>
+        <!-- 加解密服务 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>${bcprov.version}</version>
         </dependency>
     </dependencies>
 

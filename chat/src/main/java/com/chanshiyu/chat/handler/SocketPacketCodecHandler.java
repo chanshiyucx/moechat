@@ -22,12 +22,12 @@ public class SocketPacketCodecHandler extends MessageToMessageCodec<ByteBuf, Pac
     private SocketPacketCodecHandler() {}
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) throws Exception {
         out.add(PacketCodec.INSTANCE.decode(byteBuf));
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) {
+    protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) throws Exception {
         ByteBuf byteBuf = ctx.channel().alloc().ioBuffer();
         PacketCodec.INSTANCE.encode(byteBuf, packet);
         out.add(byteBuf);

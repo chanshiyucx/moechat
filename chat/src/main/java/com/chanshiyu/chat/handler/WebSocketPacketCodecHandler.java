@@ -23,12 +23,12 @@ public class WebSocketPacketCodecHandler extends MessageToMessageCodec<TextWebSo
     private WebSocketPacketCodecHandler() {}
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame msg, List<Object> out) {
+    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame msg, List<Object> out) throws Exception {
         out.add(PacketCodec.INSTANCE.decode(msg.content()));
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) {
+    protected void encode(ChannelHandlerContext ctx, Packet packet, List<Object> out) throws Exception {
         ByteBuf byteBuf = ctx.channel().alloc().ioBuffer();
         PacketCodec.INSTANCE.encode(byteBuf, packet);
         out.add(new TextWebSocketFrame(byteBuf));

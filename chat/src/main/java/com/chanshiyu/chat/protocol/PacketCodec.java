@@ -8,7 +8,10 @@ import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import com.chanshiyu.common.util.CryptoAesUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -89,6 +92,7 @@ public class PacketCodec {
         int length = byteBuf.readInt();
         byte[] bytes = new byte[length];
         byteBuf.readBytes(bytes);
+        // 数据包解密
         bytes = CryptoAesUtil.decrypt(bytes, CryptoAttributes.DEFAULT_KEY, CryptoAttributes.DEFAULT_IV);
         Class<? extends Packet> requestType = getRequestType(command);
         Serializer serializer = getSerializer(serializeAlgorithm);

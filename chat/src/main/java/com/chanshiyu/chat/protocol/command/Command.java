@@ -60,4 +60,9 @@ public interface Command {
     byte GROUP_MESSAGE_REQUEST = 17;
     byte GROUP_MESSAGE_RESPONSE = 18;
 
+    /**
+     * 错误消息
+     */
+    byte ERROR_OPERATION_RESPONSE = 101;
+
 }

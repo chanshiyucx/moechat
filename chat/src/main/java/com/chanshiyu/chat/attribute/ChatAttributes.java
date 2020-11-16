@@ -12,4 +12,6 @@ public interface ChatAttributes {
 
     AttributeKey<Session> SESSION = AttributeKey.newInstance("session");
 
+    AttributeKey<String> IP = AttributeKey.newInstance("CLIENT_IP");
+
 }

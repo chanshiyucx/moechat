@@ -17,7 +17,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ListGroupMembersResponsePacket extends Packet {
 
-    private long groupId;
+    private int groupId;
 
     private List<Session> sessionList;
 

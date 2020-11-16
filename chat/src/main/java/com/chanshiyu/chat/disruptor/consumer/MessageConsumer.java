@@ -1,5 +1,7 @@
 package com.chanshiyu.chat.disruptor.consumer;
 
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.chanshiyu.chat.attribute.ChatAttributes;
 import com.chanshiyu.chat.disruptor.wapper.TranslatorDataWrapper;
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
@@ -8,6 +10,10 @@ import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.session.Session;
 import com.chanshiyu.chat.util.IDUtil;
 import com.chanshiyu.chat.util.SessionUtil;
+import com.chanshiyu.common.util.SpringUtil;
+import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.service.IAccountService;
+import com.chanshiyu.service.IBlacklistService;
 import com.lmax.disruptor.WorkHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -65,15 +71,52 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void login(Channel channel, LoginRequestPacket packet) {
-        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();
-        loginResponsePacket.setVersion(packet.getVersion());
-        loginResponsePacket.setUsername(packet.getUsername());
-        loginResponsePacket.setSuccess(true);
-        long userId = IDUtil.randomId();
-        loginResponsePacket.setUserId(userId);
-        SessionUtil.bindSession(new Session(userId, packet.getUsername()), channel);
-        channel.writeAndFlush(loginResponsePacket);
-        log.info("[{}]登录成功", packet.getUsername());
+        // ip 黑名单检测
+        String ip = channel.attr(ChatAttributes.IP).get();
+        if (StringUtils.isNotBlank(ip)) {
+            IBlacklistService blacklistService = SpringUtil.getBean(IBlacklistService.class);
+            boolean isBlock = blacklistService.isBlock(ip);
+            if (isBlock) {
+                log.info("IP已被封禁：[{}]", ip);
+                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("IP已被封禁！");
+                channel.writeAndFlush(errorOperationResponsePacket);
+                return;
+            }
+        }
+
+        // 注册或登录流程
+        String regex = "^[a-zA-Z0-9._-]{3,12}$";
+        if (!packet.getUsername().matches(regex) || !packet.getPassword().matches(regex)) {
+            log.info("用户名或密码格式错误，username: [{}]，password: [{}]", packet.getUsername(), packet.getPassword());
+            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("用户名和密码必须为3-12位数字字母下划线组合！");
+            channel.writeAndFlush(errorOperationResponsePacket);
+            return;
+        }
+        Account account;
+        try {
+            IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+            account = accountService.registerOrLogin(packet.getUsername(), packet.getPassword());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("注册或登录失败：[{}]", packet);
+            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("注册或登录失败！");
+            channel.writeAndFlush(errorOperationResponsePacket);
+            return;
+        }
+
+        // 绑定会话
+        // TODO: 会话数和链接数限制
+
+
+//        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();
+//        loginResponsePacket.setVersion(packet.getVersion());
+//        loginResponsePacket.setUsername(packet.getUsername());
+//        loginResponsePacket.setSuccess(true);
+//        long userId = IDUtil.randomId();
+//        loginResponsePacket.setUserId(userId);
+//        SessionUtil.bindSession(new Session(userId, packet.getUsername()), channel);
+//        channel.writeAndFlush(loginResponsePacket);
+        log.info("[{}]登录成功", account.getUsername());
     }
 
     private void logout(Channel channel, LogoutRequestPacket packet) {
@@ -102,12 +145,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void createGroup(ChannelHandlerContext ctx, CreateGroupRequestPacket packet) {
-        List<Long> userIdList = packet.getUserIdList();
+        List<Integer> userIdList = packet.getUserIdList();
         List<String> userNameList = new ArrayList<>();
         // 1. 创建一个 channel 分组
         ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());
         // 2. 筛选出待加入群聊的用户的 channel 和 userName
-        for (long userId : userIdList) {
+        for (int userId : userIdList) {
             Channel channel = SessionUtil.getChannel(userId);
             if (channel != null) {
                 channelGroup.add(channel);
@@ -115,21 +158,21 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             }
         }
         // 3. 创建群聊创建结果的响应
-        long groupId = IDUtil.randomId();
-        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket();
-        createGroupResponsePacket.setSuccess(true);
-        createGroupResponsePacket.setGroupId(groupId);
-        createGroupResponsePacket.setUsernameList(userNameList);
-        // 4. 给每个客户端发送拉群通知
-        channelGroup.writeAndFlush(createGroupResponsePacket);
-        // 5. 保存群组相关的信息
-        SessionUtil.bindChannelGroup(groupId, channelGroup);
-        log.info("群创建成功，id：{}, 群成员：{}", createGroupResponsePacket.getGroupId(), createGroupResponsePacket.getUsernameList());
+//        long groupId = IDUtil.randomId();
+//        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket();
+//        createGroupResponsePacket.setSuccess(true);
+//        createGroupResponsePacket.setGroupId(groupId);
+//        createGroupResponsePacket.setUsernameList(userNameList);
+//        // 4. 给每个客户端发送拉群通知
+//        channelGroup.writeAndFlush(createGroupResponsePacket);
+//        // 5. 保存群组相关的信息
+//        SessionUtil.bindChannelGroup(groupId, channelGroup);
+//        log.info("群创建成功，id：{}, 群成员：{}", createGroupResponsePacket.getGroupId(), createGroupResponsePacket.getUsernameList());
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
         // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 添加进去
-        long groupId = packet.getGroupId();
+        int groupId = packet.getGroupId();
         ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
         channelGroup.add(channel);
         // 2. 构造加群响应发送给客户端
@@ -141,7 +184,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
         // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 移除
-        long groupId = packet.getGroupId();
+        int groupId = packet.getGroupId();
         ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
         channelGroup.remove(channel);
         // 2. 构造退群响应发送给客户端
@@ -153,7 +196,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void groupMessage(Channel channel, GroupMessageRequestPacket packet) {
         // 1.拿到 groupId 构造群聊消息的响应
-        long groupId = packet.getToGroupId();
+        int groupId = packet.getToGroupId();
         GroupMessageResponsePacket responsePacket = new GroupMessageResponsePacket();
         responsePacket.setFromGroupId(groupId);
         responsePacket.setMessage(packet.getMessage());
@@ -165,7 +208,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void listGroupMembers(Channel channel, ListGroupMembersRequestPacket packet) {
         // 1. 获取群的 ChannelGroup
-        long groupId = packet.getGroupId();
+        int groupId = packet.getGroupId();
         ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
         // 2. 遍历群成员的 channel，对应的 session，构造群成员的信息
         List<Session> sessionList = new ArrayList<>();

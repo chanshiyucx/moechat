@@ -1,17 +1,22 @@
 package com.chanshiyu.service;
 
-import com.chanshiyu.mbg.entity.Account;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.chanshiyu.mbg.model.params.AccountParam;
+import com.chanshiyu.mbg.entity.Account;
 
 /**
  * @author SHIYU
  * @since 2020-11-15
  */
 public interface IAccountService extends IService<Account> {
+
     /**
-     * 注册
+     * 根据用户名获取账号
      */
-//     Account register(AccountParam accountParam);
+    Account getAccountByUsername(String username);
+
+    /**
+     * 注册或登录
+     */
+    Account registerOrLogin(String username, String password);
 
 }

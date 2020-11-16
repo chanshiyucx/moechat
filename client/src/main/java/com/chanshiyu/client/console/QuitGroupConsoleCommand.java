@@ -16,7 +16,7 @@ public class QuitGroupConsoleCommand implements ConsoleCommand {
     public void exec(Scanner scanner, Channel channel) {
         System.out.print("输入 groupId，退出群聊：");
         QuitGroupRequestPacket quitGroupRequestPacket = new QuitGroupRequestPacket();
-        long groupId = scanner.nextLong();
+        int groupId = scanner.nextInt();
         quitGroupRequestPacket.setGroupId(groupId);
         channel.writeAndFlush(quitGroupRequestPacket);
     }

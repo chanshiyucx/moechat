@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class JoinGroupResponsePacket extends Packet {
 
-    private long groupId;
+    private int groupId;
 
     private boolean success;
 

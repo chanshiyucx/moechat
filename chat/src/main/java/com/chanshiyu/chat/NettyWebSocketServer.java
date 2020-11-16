@@ -41,6 +41,7 @@ public class NettyWebSocketServer {
                         ch.pipeline().addLast(new HttpServerCodec());
                         ch.pipeline().addLast(new ChunkedWriteHandler());
                         ch.pipeline().addLast(new HttpObjectAggregator(1024 * 64));
+                        ch.pipeline().addLast(IPHandler.INSTANCE);
                         ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new WebSocketServerProtocolHandler("/chat"));
                         ch.pipeline().addLast(WebSocketPacketCodecHandler.INSTANCE);

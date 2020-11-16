@@ -63,6 +63,7 @@ public class NettyClient {
                         ch.pipeline().addLast(new ListGroupMembersResponseHandler());
                         ch.pipeline().addLast(new GroupMessageResponseHandler());
                         ch.pipeline().addLast(new HeartBeatResponseHandler());
+                        ch.pipeline().addLast(new ErrorOperationResponseHandler());
                     }
                 });
         connect(bootstrap, HOST, PORT, MAX_RETRY);

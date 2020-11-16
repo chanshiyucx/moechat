@@ -15,9 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SessionUtil {
 
-    private static final Map<Long, Channel> userIdChannelMap = new ConcurrentHashMap<>();
+    private static final Map<Integer, Channel> userIdChannelMap = new ConcurrentHashMap<>();
 
-    private static final Map<Long, ChannelGroup> groupIdChannelGroupMap = new ConcurrentHashMap<>();
+    private static final Map<Integer, ChannelGroup> groupIdChannelGroupMap = new ConcurrentHashMap<>();
 
     public static void bindSession(Session session, Channel channel) {
         userIdChannelMap.put(session.getUserId(), channel);
@@ -40,15 +40,15 @@ public class SessionUtil {
         return channel.attr(ChatAttributes.SESSION).get();
     }
 
-    public static Channel getChannel(long userId) {
+    public static Channel getChannel(int userId) {
         return userIdChannelMap.get(userId);
     }
 
-    public static void bindChannelGroup(long groupId, ChannelGroup channelGroup) {
+    public static void bindChannelGroup(int groupId, ChannelGroup channelGroup) {
         groupIdChannelGroupMap.put(groupId, channelGroup);
     }
 
-    public static ChannelGroup getChannelGroup(long groupId) {
+    public static ChannelGroup getChannelGroup(int groupId) {
         return groupIdChannelGroupMap.get(groupId);
     }
 

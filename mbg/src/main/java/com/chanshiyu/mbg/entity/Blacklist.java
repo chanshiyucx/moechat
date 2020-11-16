@@ -21,27 +21,19 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="Account对象", description="")
-public class Account implements Serializable {
+@ApiModel(value="Blacklist对象", description="")
+public class Blacklist implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    @ApiModelProperty(value = "用户名")
-    private String username;
-
-    @ApiModelProperty(value = "密码")
-    private String password;
-
-    @ApiModelProperty(value = "昵称")
-    private String nickname;
-
-    @ApiModelProperty(value = "启用状态<0:禁用,1:启用>")
-    private Integer status;
+    @ApiModelProperty(value = "IP")
+    private String ip;
 
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;
+
 
 }

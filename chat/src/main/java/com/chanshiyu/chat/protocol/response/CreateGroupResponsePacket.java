@@ -18,7 +18,7 @@ public class CreateGroupResponsePacket extends Packet {
 
     private boolean success;
 
-    private long groupId;
+    private int groupId;
 
     private List<String> usernameList;
 

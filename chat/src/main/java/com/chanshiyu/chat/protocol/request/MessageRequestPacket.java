@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor
 public class MessageRequestPacket extends Packet {
 
-    private long toUserId;
+    private int toUserId;
 
     private int index;
 

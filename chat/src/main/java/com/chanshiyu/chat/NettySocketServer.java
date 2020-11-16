@@ -1,10 +1,7 @@
 package com.chanshiyu.chat;
 
-import com.chanshiyu.chat.handler.SocketPacketCodecHandler;
+import com.chanshiyu.chat.handler.*;
 import com.chanshiyu.chat.codec.Splitter;
-import com.chanshiyu.chat.handler.AuthHandler;
-import com.chanshiyu.chat.handler.IMHandler;
-import com.chanshiyu.chat.handler.IMIdleStateHandler;
 import com.chanshiyu.chat.handler.request.HeartBeatRequestHandler;
 import com.chanshiyu.chat.handler.request.LoginRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -42,6 +39,7 @@ public class NettySocketServer {
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast(IPHandler.INSTANCE);
                         ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Splitter());
                         ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);

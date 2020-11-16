@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor
 public class GroupMessageRequestPacket extends Packet {
 
-    private long toGroupId;
+    private int toGroupId;
 
     private String message;
 

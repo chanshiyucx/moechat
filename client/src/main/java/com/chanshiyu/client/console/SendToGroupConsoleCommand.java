@@ -15,7 +15,7 @@ public class SendToGroupConsoleCommand implements ConsoleCommand {
     @Override
     public void exec(Scanner scanner, Channel channel) {
         System.out.print("发送消息给某个群组：");
-        long toGroupId = scanner.nextLong();
+        int toGroupId = scanner.nextInt();
         String message = scanner.next();
         channel.writeAndFlush(new GroupMessageRequestPacket(toGroupId, message));
     }

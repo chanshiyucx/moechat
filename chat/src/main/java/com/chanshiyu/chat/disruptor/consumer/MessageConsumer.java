@@ -1,5 +1,6 @@
 package com.chanshiyu.chat.disruptor.consumer;
 
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.ChatAttributes;
 import com.chanshiyu.chat.disruptor.wapper.TranslatorDataWrapper;
@@ -149,10 +150,10 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void logout(Channel channel, LogoutRequestPacket packet) {
-        SessionUtil.unBindSession(channel);
         LogoutResponsePacket logoutResponsePacket = new LogoutResponsePacket();
         logoutResponsePacket.setSuccess(true);
         channel.writeAndFlush(logoutResponsePacket);
+        SessionUtil.unBindSession(channel);
     }
 
     private void message(Channel channel, MessageRequestPacket packet) {

@@ -55,7 +55,6 @@ public class JwtUtil {
      * 根据用户信息生成token
      */
     public String generateToken(String username) {
-        System.out.println("username---" + username);
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_KEY_USERNAME, username);
         claims.put(CLAIM_KEY_CREATED, new Date());

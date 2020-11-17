@@ -7,8 +7,8 @@ package com.chanshiyu.chat.attribute;
  */
 public interface CryptoAttributes {
 
-    String DEFAULT_KEY = "vViwLY9Auz1wd9SU";
+    String DEFAULT_KEY = "WnBkF4wsjVrcVHp8";
 
-    String DEFAULT_IV = "0XiT4j0ZelK4CjHe";
+    String DEFAULT_IV = "VJ8jbs14XNNnxDmY";
 
 }

@@ -94,28 +94,36 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         IAccountService accountService = SpringUtil.getBean(IAccountService.class);
         JwtUtil jwtUtil = SpringUtil.getBean(JwtUtil.class);
-        Account account;
+        Account account = null;
+        String errorMsg = null;
         String username = packet.getUsername();
         String password = packet.getPassword();
         String token = packet.getToken();
-        if (StringUtils.isNotBlank(token)) {
-            // 从 token 登录
-            username = jwtUtil.getUserNameFromToken(token);
-            account = accountService.getAccountByUsername(username);
-        } else {
-            // 注册或登录流程
-            String regex = "^[a-zA-Z0-9._-]{3,12}$";
-            if (!username.matches(regex) || !password.matches(regex)) {
-                log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
-                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("用户名和密码必须为3-12位数字字母下划线组合！");
-                channel.writeAndFlush(errorOperationResponsePacket);
-                return;
+        try {
+            if (StringUtils.isNotBlank(token)) {
+                // 从 token 登录
+                username = jwtUtil.getUserNameFromToken(token);
+                account = accountService.getAccountByUsername(username);
+            } else {
+                // 注册或登录流程
+                String regex = "^[a-zA-Z0-9._-]{3,12}$";
+                if (!username.matches(regex) || !password.matches(regex)) {
+                    log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
+                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("用户名和密码必须为3-12位数字字母下划线组合！");
+                    channel.writeAndFlush(errorOperationResponsePacket);
+                    return;
+                }
+                account = accountService.registerOrLogin(username, password);
             }
-            account = accountService.registerOrLogin(username, password);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
         }
         if (account == null) {
-            log.info("注册或登录失败：[{}]", packet);
-            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("注册或登录失败！");
+            if (StringUtils.isBlank(errorMsg)) {
+                errorMsg = "注册或登录失败!";
+            }
+            log.info("{}：[{}]", errorMsg, packet);
+            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(errorMsg);
             channel.writeAndFlush(errorOperationResponsePacket);
             return;
         }

@@ -52,7 +52,7 @@ public class IPHandler extends ChannelInboundHandlerAdapter {
             InetSocketAddress socket = (InetSocketAddress) ctx.channel().remoteAddress();
             ipAddress = socket.getAddress().getHostAddress();
         }
-        log.info("新用户接入，IP：[{}]", ipAddress);
+        log.info("新用户接入IP：[{}]", ipAddress);
         ctx.channel().attr(ChatAttributes.IP).set(ipAddress);
         ctx.pipeline().remove(this);
         super.channelRead(ctx, msg);

@@ -40,6 +40,7 @@ public class NettySocketServer {
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
                         ch.pipeline().addLast(IPHandler.INSTANCE);
+                        ch.pipeline().addLast(ConnectionCountHandler.INSTANCE);
                         ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Splitter());
                         ch.pipeline().addLast(SocketPacketCodecHandler.INSTANCE);

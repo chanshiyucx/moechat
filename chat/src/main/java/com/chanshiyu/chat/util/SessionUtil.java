@@ -30,6 +30,7 @@ public class SessionUtil {
             userIdChannelMap.remove(session.getUserId());
             channel.attr(ChatAttributes.SESSION).set(null);
         }
+        channel.close();
     }
 
     public static boolean hasLogin(Channel channel) {
@@ -50,6 +51,12 @@ public class SessionUtil {
 
     public static ChannelGroup getChannelGroup(int groupId) {
         return groupIdChannelGroupMap.get(groupId);
+    }
+
+    public static long getChannelCountByIP(String ip) {
+        return userIdChannelMap.values().stream()
+                .filter(channel -> channel.attr(ChatAttributes.IP).get().equals(ip))
+                .count();
     }
 
 }

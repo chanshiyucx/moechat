@@ -20,6 +20,8 @@ public class LoginRequestPacket extends Packet {
 
     private String password;
 
+    private String token;
+
     @Override
     public Byte getCommand() {
         return Command.LOGIN_REQUEST;

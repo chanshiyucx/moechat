@@ -52,6 +52,16 @@ public class JwtUtil {
     }
 
     /**
+     * 根据用户信息生成token
+     */
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_KEY_USERNAME, username);
+        claims.put(CLAIM_KEY_CREATED, new Date());
+        return generateToken(claims);
+    }
+
+    /**
      * 生成JWT的token
      */
     private String generateToken(Map<String, Object> claims) {
@@ -124,17 +134,7 @@ public class JwtUtil {
     }
 
     /**
-     * 根据用户信息生成token
-     */
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(CLAIM_KEY_USERNAME, userDetails.getUsername());
-        claims.put(CLAIM_KEY_CREATED, new Date());
-        return generateToken(claims);
-    }
-
-    /**
-     * 当原来的token没过期时是可以刷新的
+     * 当原来的token没过期时是可以刷新
      */
     public String refreshHeadToken(String oldToken) {
         if (StrUtil.isEmpty(oldToken)) {

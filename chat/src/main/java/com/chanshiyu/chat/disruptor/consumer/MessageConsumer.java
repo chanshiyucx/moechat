@@ -8,8 +8,8 @@ import com.chanshiyu.chat.protocol.command.Command;
 import com.chanshiyu.chat.protocol.request.*;
 import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.session.Session;
-import com.chanshiyu.chat.util.IDUtil;
 import com.chanshiyu.chat.util.SessionUtil;
+import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.service.IAccountService;
@@ -22,6 +22,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -71,51 +72,71 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void login(Channel channel, LoginRequestPacket packet) {
-        // ip 黑名单检测
         String ip = channel.attr(ChatAttributes.IP).get();
         if (StringUtils.isNotBlank(ip)) {
+            // ip 黑名单检测
             IBlacklistService blacklistService = SpringUtil.getBean(IBlacklistService.class);
-            boolean isBlock = blacklistService.isBlock(ip);
-            if (isBlock) {
+            if (blacklistService.isBlock(ip)) {
                 log.info("IP已被封禁：[{}]", ip);
                 ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("IP已被封禁！");
                 channel.writeAndFlush(errorOperationResponsePacket);
                 return;
             }
+
+            // ip 会话数检测
+            if (SessionUtil.getChannelCountByIP(ip) >= 5) {
+                log.info("IP连接数已达最大值：[{}]", ip);
+                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("请稍后再试喵！");
+                channel.writeAndFlush(errorOperationResponsePacket);
+                return;
+            }
         }
 
-        // 注册或登录流程
-        String regex = "^[a-zA-Z0-9._-]{3,12}$";
-        if (!packet.getUsername().matches(regex) || !packet.getPassword().matches(regex)) {
-            log.info("用户名或密码格式错误，username: [{}]，password: [{}]", packet.getUsername(), packet.getPassword());
-            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("用户名和密码必须为3-12位数字字母下划线组合！");
-            channel.writeAndFlush(errorOperationResponsePacket);
-            return;
-        }
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+        JwtUtil jwtUtil = SpringUtil.getBean(JwtUtil.class);
         Account account;
-        try {
-            IAccountService accountService = SpringUtil.getBean(IAccountService.class);
-            account = accountService.registerOrLogin(packet.getUsername(), packet.getPassword());
-        } catch (Exception e) {
-            e.printStackTrace();
+        String username = packet.getUsername();
+        String password = packet.getPassword();
+        String token = packet.getToken();
+        if (StringUtils.isNotBlank(token)) {
+            // 从 token 登录
+            username = jwtUtil.getUserNameFromToken(token);
+            account = accountService.getAccountByUsername(username);
+        } else {
+            // 注册或登录流程
+            String regex = "^[a-zA-Z0-9._-]{3,12}$";
+            if (!username.matches(regex) || !password.matches(regex)) {
+                log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
+                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("用户名和密码必须为3-12位数字字母下划线组合！");
+                channel.writeAndFlush(errorOperationResponsePacket);
+                return;
+            }
+            account = accountService.registerOrLogin(username, password);
+        }
+        if (account == null) {
             log.info("注册或登录失败：[{}]", packet);
             ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("注册或登录失败！");
             channel.writeAndFlush(errorOperationResponsePacket);
             return;
         }
 
-        // 绑定会话
-        // TODO: 会话数和链接数限制
+        // 解绑旧会话
+        Channel oldChannel = SessionUtil.getChannel(account.getId());
+        if (oldChannel != null) {
+            log.info("用户[{}]已在别处登录，旧IP：[{}]，新IP：[{}]", account.getId(), oldChannel.attr(ChatAttributes.IP).get(), ip);
+            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket("该账户已在别处登录！");
+            oldChannel.writeAndFlush(errorOperationResponsePacket);
+            SessionUtil.unBindSession(oldChannel);
+        }
 
+        // 绑定新会话
+        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), ip, new Date());
+        SessionUtil.bindSession(session, channel);
 
-//        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();
-//        loginResponsePacket.setVersion(packet.getVersion());
-//        loginResponsePacket.setUsername(packet.getUsername());
-//        loginResponsePacket.setSuccess(true);
-//        long userId = IDUtil.randomId();
-//        loginResponsePacket.setUserId(userId);
-//        SessionUtil.bindSession(new Session(userId, packet.getUsername()), channel);
-//        channel.writeAndFlush(loginResponsePacket);
+        // 登录成功响应
+        String newToken = jwtUtil.generateToken(session.getUsername());
+        LoginResponsePacket loginResponsePacket = new LoginResponsePacket(session.getUserId(), session.getUsername(), session.getNickname(), newToken, true, "登录成功");
+        channel.writeAndFlush(loginResponsePacket);
         log.info("[{}]登录成功", account.getUsername());
     }
 

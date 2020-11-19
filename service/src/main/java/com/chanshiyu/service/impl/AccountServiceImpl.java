@@ -38,13 +38,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public Account registerOrLogin(String username, String password) {
         Account account = getAccountByUsername(username);
         if (account == null) {
-            account = new Account();
-            account.setUsername(username);
-            account.setNickname(username);
-            account.setCreateTime(LocalDateTime.now());
-            account.setStatus(AccountAttributes.ACTIVE);
-            String encodePassword = passwordEncoder.encode(password);
-            account.setPassword(encodePassword);
+            account = Account.builder()
+                    .username(username)
+                    .nickname(username)
+                    .password(passwordEncoder.encode(password))
+                    .avatar(null)
+                    .status(AccountAttributes.ACTIVE)
+                    .createTime(LocalDateTime.now())
+                    .build();
             accountMapper.insert(account);
         } else {
             if (!passwordEncoder.matches(password, account.getPassword())) {

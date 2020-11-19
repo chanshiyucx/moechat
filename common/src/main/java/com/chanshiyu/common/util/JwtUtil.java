@@ -2,6 +2,7 @@ package com.chanshiyu.common.util;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import com.google.common.collect.Maps;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -23,6 +24,8 @@ import java.util.Map;
 @Slf4j
 @Component
 public class JwtUtil {
+
+    private static final String CLAIM_KEY_USERID = "jti";
 
     private static final String CLAIM_KEY_USERNAME = "sub";
 
@@ -54,8 +57,9 @@ public class JwtUtil {
     /**
      * 根据用户信息生成token
      */
-    public String generateToken(String username) {
+    public String generateToken(int userId, String username) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_KEY_USERID, userId);
         claims.put(CLAIM_KEY_USERNAME, username);
         claims.put(CLAIM_KEY_CREATED, new Date());
         return generateToken(claims);
@@ -75,7 +79,7 @@ public class JwtUtil {
     /**
      * 从token中获取JWT中的负载
      */
-    private Claims getClaimsFromToken(String token) {
+    public Claims getClaimsFromToken(String token) {
         Claims claims = null;
         try {
             claims = Jwts.parser()

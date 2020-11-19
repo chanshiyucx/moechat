@@ -22,6 +22,8 @@ public class LoginResponsePacket extends Packet {
 
     private String nickname;
 
+    private String avatar;
+
     private String token;
 
     private boolean success;

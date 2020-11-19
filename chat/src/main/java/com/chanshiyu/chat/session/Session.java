@@ -1,13 +1,10 @@
 package com.chanshiyu.chat.session;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.netty.channel.Channel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author SHIYU
@@ -25,7 +22,11 @@ public class Session {
 
     private String nickname;
 
+    private String avatar;
+
     private String ip;
+
+    private boolean tourist;
 
     private Date onlineDate;
 

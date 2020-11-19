@@ -8,6 +8,7 @@
         <result column="username" property="username" />
         <result column="password" property="password" />
         <result column="nickname" property="nickname" />
+        <result column="avatar" property="avatar" />
         <result column="status" property="status" />
         <result column="create_time" property="createTime" />
     </resultMap>

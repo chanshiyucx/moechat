@@ -1,6 +1,5 @@
 package com.chanshiyu.chat.disruptor.consumer;
 
-import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.ChatAttributes;
 import com.chanshiyu.chat.disruptor.wapper.TranslatorDataWrapper;
@@ -9,6 +8,7 @@ import com.chanshiyu.chat.protocol.command.Command;
 import com.chanshiyu.chat.protocol.request.*;
 import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.session.Session;
+import com.chanshiyu.chat.util.ChatUtil;
 import com.chanshiyu.chat.util.SessionUtil;
 import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
@@ -16,6 +16,7 @@ import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
 import com.lmax.disruptor.WorkHandler;
+import io.jsonwebtoken.Claims;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
@@ -95,17 +96,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         IAccountService accountService = SpringUtil.getBean(IAccountService.class);
         JwtUtil jwtUtil = SpringUtil.getBean(JwtUtil.class);
-        Account account = null;
-        String errorMsg = null;
         String username = packet.getUsername();
         String password = packet.getPassword();
         String token = packet.getToken();
+        Account account = null;
+        String errorMsg = null;
         try {
-            if (StringUtils.isNotBlank(token)) {
-                // 从 token 登录
-                username = jwtUtil.getUserNameFromToken(token);
-                account = accountService.getAccountByUsername(username);
-            } else {
+            if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
                 // 注册或登录流程
                 String regex = "^[a-zA-Z0-9._-]{3,12}$";
                 if (!username.matches(regex) || !password.matches(regex)) {
@@ -115,6 +112,21 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     return;
                 }
                 account = accountService.registerOrLogin(username, password);
+            } else if (StringUtils.isNotBlank(token)) {
+                // token 登录，这里不需要验证过期时间
+                Claims claims = jwtUtil.getClaimsFromToken(token);
+                int userId = Integer.parseInt(claims.getId());
+                if (!ChatUtil.isTourist(userId)) {
+                    // 用户
+                    username = claims.getSubject();
+                    account = accountService.getAccountByUsername(username);
+                } else {
+                    // 旧游客
+                    account = ChatUtil.getTouristAccount(userId);
+                }
+            } else {
+                // 新游客
+                account = ChatUtil.getTouristAccount();
             }
         } catch (Exception e) {
             errorMsg = e.getMessage();
@@ -139,14 +151,16 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         }
 
         // 绑定新会话
-        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), ip, new Date());
+        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), account.getAvatar(), ip, ChatUtil.isTourist(account.getId()), new Date());
         SessionUtil.bindSession(session, channel);
 
         // 登录成功响应
-        String newToken = jwtUtil.generateToken(session.getUsername());
-        LoginResponsePacket loginResponsePacket = new LoginResponsePacket(session.getUserId(), session.getUsername(), session.getNickname(), newToken, true, "登录成功");
+        String newToken = jwtUtil.generateToken(session.getUserId(), session.getUsername());
+        LoginResponsePacket loginResponsePacket = new LoginResponsePacket(session.getUserId(), session.getUsername(), session.getNickname(), session.getAvatar(), newToken, true, "登录成功");
         channel.writeAndFlush(loginResponsePacket);
-        log.info("[{}]登录成功", account.getUsername());
+        log.info("[{}]登录成功", session.getUsername());
+
+        // 推送世界频道
     }
 
     private void logout(Channel channel, LogoutRequestPacket packet) {

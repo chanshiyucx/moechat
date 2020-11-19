@@ -1,4 +1,4 @@
-package com.chanshiyu.yuko;
+package com.chanshiyu.mbg;
 
 import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;

@@ -20,14 +20,14 @@ public class ChatUtil {
     /**
      * 生成游客账户
      */
-    public static Account getTouristAccount() {
+    public static Account generateTouristAccount() {
         RedisService redis = getRedis();
         long incr = redis.incr(RedisAttributes.TOURIST_ID_KEY, 1);
         int userId = (int) (incr + RedisAttributes.TOURIST_ID_START);
-        return getTouristAccount(userId);
+        return generateTouristAccount(userId);
     }
 
-    public static Account getTouristAccount(int userId) {
+    public static Account generateTouristAccount(int userId) {
         String username = StringUtils.format(RedisAttributes.TOURIST_USERNAME, userId);
         return Account.builder()
                 .id(userId)
@@ -41,7 +41,7 @@ public class ChatUtil {
      * 判断是否为游客
      */
     public static boolean isTourist(int userId) {
-        return userId < RedisAttributes.TOURIST_ID_START;
+        return userId > RedisAttributes.TOURIST_ID_START;
     }
 
 }

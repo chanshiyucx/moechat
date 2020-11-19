@@ -16,6 +16,8 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor
 public class ErrorOperationResponsePacket extends Packet {
 
+    private boolean close;
+
     private String message;
 
     @Override

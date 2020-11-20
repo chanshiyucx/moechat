@@ -61,6 +61,12 @@ public interface Command {
     byte GROUP_MESSAGE_RESPONSE = 18;
 
     /**
+     * 聊天记录
+     */
+    byte CHAT_HISTORY_REQUEST = 19;
+    byte CHAT_HISTORY_RESPONSE = 20;
+
+    /**
      * 错误消息
      */
     byte ERROR_OPERATION_RESPONSE = 101;

@@ -8,7 +8,7 @@ import io.netty.util.AttributeKey;
  * @description
  * @since 2020/11/9 17:39
  */
-public interface ChatAttributes {
+public interface ChannelAttributes {
 
     AttributeKey<Session> SESSION = AttributeKey.newInstance("session");
 

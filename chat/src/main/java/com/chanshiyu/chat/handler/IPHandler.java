@@ -1,6 +1,6 @@
 package com.chanshiyu.chat.handler;
 
-import com.chanshiyu.chat.attribute.ChatAttributes;
+import com.chanshiyu.chat.attribute.ChannelAttributes;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -53,7 +53,7 @@ public class IPHandler extends ChannelInboundHandlerAdapter {
             ipAddress = socket.getAddress().getHostAddress();
         }
         log.info("新用户接入IP：[{}]", ipAddress);
-        ctx.channel().attr(ChatAttributes.IP).set(ipAddress);
+        ctx.channel().attr(ChannelAttributes.IP).set(ipAddress);
         ctx.pipeline().remove(this);
         super.channelRead(ctx, msg);
     }

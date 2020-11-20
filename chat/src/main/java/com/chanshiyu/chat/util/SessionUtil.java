@@ -1,6 +1,6 @@
 package com.chanshiyu.chat.util;
 
-import com.chanshiyu.chat.attribute.ChatAttributes;
+import com.chanshiyu.chat.attribute.ChannelAttributes;
 import com.chanshiyu.chat.session.Session;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
@@ -21,14 +21,14 @@ public class SessionUtil {
 
     public static void bindSession(Session session, Channel channel) {
         userIdChannelMap.put(session.getUserId(), channel);
-        channel.attr(ChatAttributes.SESSION).set(session);
+        channel.attr(ChannelAttributes.SESSION).set(session);
     }
 
     public static void unBindSession(Channel channel) {
         if (hasLogin(channel)) {
             Session session = getSession(channel);
             userIdChannelMap.remove(session.getUserId());
-            channel.attr(ChatAttributes.SESSION).set(null);
+            channel.attr(ChannelAttributes.SESSION).set(null);
         }
         channel.close();
     }
@@ -38,7 +38,7 @@ public class SessionUtil {
     }
 
     public static Session getSession(Channel channel) {
-        return channel.attr(ChatAttributes.SESSION).get();
+        return channel.attr(ChannelAttributes.SESSION).get();
     }
 
     public static Channel getChannel(int userId) {
@@ -55,7 +55,7 @@ public class SessionUtil {
 
     public static long getChannelCountByIP(String ip) {
         return userIdChannelMap.values().stream()
-                .filter(channel -> channel.attr(ChatAttributes.IP).get().equals(ip))
+                .filter(channel -> channel.attr(ChannelAttributes.IP).get().equals(ip))
                 .count();
     }
 

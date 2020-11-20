@@ -2,39 +2,28 @@ package com.chanshiyu.chat.protocol.response;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
+import com.chanshiyu.mbg.model.vo.Chat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author SHIYU
- * @description 登录响应
- * @since 2020/11/9 15:45
+ * @description
+ * @since 2020/11/20 14:48
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-public class LoginResponsePacket extends Packet {
+public class ChatHistoryResponsePacket extends Packet {
 
-    private int userId;
-
-    private String username;
-
-    private String nickname;
-
-    private String avatar;
-
-    private String token;
-
-    private boolean tourist;
-
-    private boolean success;
-
-    private String message;
+    List<Chat> chatList;
 
     @Override
     public Byte getCommand() {
-        return Command.LOGIN_RESPONSE;
+        return Command.CHAT_HISTORY_RESPONSE;
     }
 
 }

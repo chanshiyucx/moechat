@@ -1,7 +1,8 @@
 package com.chanshiyu.chat.disruptor.consumer;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.chanshiyu.chat.attribute.ChatAttributes;
+import com.chanshiyu.chat.attribute.ChannelAttributes;
+import com.chanshiyu.chat.attribute.ChatTypeAttributes;
 import com.chanshiyu.chat.disruptor.wapper.TranslatorDataWrapper;
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
@@ -13,8 +14,10 @@ import com.chanshiyu.chat.util.SessionUtil;
 import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
+import com.chanshiyu.service.IChannelService;
 import com.lmax.disruptor.WorkHandler;
 import io.jsonwebtoken.Claims;
 import io.netty.channel.Channel;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author SHIYU
@@ -74,13 +78,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void login(Channel channel, LoginRequestPacket packet) {
-        String ip = channel.attr(ChatAttributes.IP).get();
+        String ip = channel.attr(ChannelAttributes.IP).get();
         if (StringUtils.isNotBlank(ip)) {
             // ip 黑名单检测
             IBlacklistService blacklistService = SpringUtil.getBean(IBlacklistService.class);
             if (blacklistService.isBlock(ip)) {
                 log.info("IP已被封禁：[{}]", ip);
-                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true,"IP已被封禁！");
+                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "IP已被封禁！");
                 channel.writeAndFlush(errorOperationResponsePacket);
                 return;
             }
@@ -88,7 +92,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             // ip 会话数检测
             if (SessionUtil.getChannelCountByIP(ip) >= 5) {
                 log.info("IP连接数已达最大值：[{}]", ip);
-                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true,"请稍后再试喵！");
+                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "请稍后再试喵！");
                 channel.writeAndFlush(errorOperationResponsePacket);
                 return;
             }
@@ -107,7 +111,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 String regex = "^[a-zA-Z0-9._-]{3,12}$";
                 if (!username.matches(regex) || !password.matches(regex)) {
                     log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
-                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false,"用户名和密码必须为3-12位数字字母下划线组合！");
+                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false, "用户名和密码必须为3-12位数字字母下划线组合！");
                     channel.writeAndFlush(errorOperationResponsePacket);
                     return;
                 }
@@ -143,8 +147,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         // 解绑旧会话
         Channel oldChannel = SessionUtil.getChannel(account.getId());
         if (oldChannel != null) {
-            log.info("用户[{}]已在别处登录，旧IP：[{}]，新IP：[{}]", account.getId(), oldChannel.attr(ChatAttributes.IP).get(), ip);
-            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true,"该账户已在别处登录！");
+            log.info("用户[{}]已在别处登录，旧IP：[{}]，新IP：[{}]", account.getId(), oldChannel.attr(ChannelAttributes.IP).get(), ip);
+            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "该账户已在别处登录！");
             oldChannel.writeAndFlush(errorOperationResponsePacket);
             SessionUtil.unBindSession(oldChannel);
         }
@@ -155,11 +159,17 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 登录成功响应
         String newToken = jwtUtil.generateToken(session.getUserId(), session.getUsername());
-        LoginResponsePacket loginResponsePacket = new LoginResponsePacket(session.getUserId(), session.getUsername(), session.getNickname(), session.getAvatar(), newToken, true, "登录成功");
+        LoginResponsePacket loginResponsePacket = new LoginResponsePacket(session.getUserId(), session.getUsername(), session.getNickname(), session.getAvatar(), newToken, session.isTourist(), true, "登录成功");
         channel.writeAndFlush(loginResponsePacket);
         log.info("[{}]登录成功", session.getUsername());
 
-        // TODO: 推送世界频道
+        // 推送世界频道和聊天群组记录
+        IChannelService channelService = SpringUtil.getBean(IChannelService.class);
+        List<Chat> chatList = channelService.getActiveChannelList().stream()
+                .map(ch -> new Chat(ch.getId(), ChatTypeAttributes.CHANNEL, ch.getName(), ch.getAvatar(), ch.getCreateTime()))
+                .collect(Collectors.toList());
+        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(chatList);
+        channel.writeAndFlush(chatHistoryResponsePacket);
     }
 
     private void logout(Channel channel, LogoutRequestPacket packet) {

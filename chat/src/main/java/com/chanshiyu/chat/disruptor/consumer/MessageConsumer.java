@@ -14,18 +14,22 @@ import com.chanshiyu.chat.util.SessionUtil;
 import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.mbg.entity.Message;
 import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
 import com.chanshiyu.service.IChannelService;
+import com.chanshiyu.service.IMessageService;
 import com.lmax.disruptor.WorkHandler;
 import io.jsonwebtoken.Claims;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -54,7 +58,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 logout(channel, (LogoutRequestPacket) packet);
                 break;
             case Command.MESSAGE_REQUEST:
-                message(channel, (MessageRequestPacket) packet);
+                message(ctx, (MessageRequestPacket) packet);
                 break;
             case Command.CREATE_GROUP_REQUEST:
                 createGroup(ctx, (CreateGroupRequestPacket) packet);
@@ -68,8 +72,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.LIST_GROUP_MEMBERS_REQUEST:
                 listGroupMembers(channel, (ListGroupMembersRequestPacket) packet);
                 break;
-            case Command.GROUP_MESSAGE_REQUEST:
-                groupMessage(channel, (GroupMessageRequestPacket) packet);
+            case Command.CHAT_MESSAGE_REQUEST:
+                historyMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
             default:
                 log.error("command -> {} , 该消息未被处理", command);
@@ -179,22 +183,58 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         SessionUtil.unBindSession(channel);
     }
 
-    private void message(Channel channel, MessageRequestPacket packet) {
-        // 1.拿到消息发送方的会话信息
+    private void message(ChannelHandlerContext ctx, MessageRequestPacket packet) {
+        IMessageService messageService = SpringUtil.getBean(IMessageService.class);
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+        Channel channel = ctx.channel();
         Session session = SessionUtil.getSession(channel);
-        // 2.通过消息发送方的会话信息构造要发送的消息
-        MessageResponsePacket messageResponsePacket = new MessageResponsePacket();
-        messageResponsePacket.setFromUserId(session.getUserId());
-        messageResponsePacket.setFromUsername(session.getUsername());
-        messageResponsePacket.setMessage(packet.getMessage());
-        // 3.拿到消息接收方的 channel
-        Channel toUserChannel = SessionUtil.getChannel(packet.getToUserId());
-        // 4.将消息发送给消息接收方
-        if (toUserChannel != null && SessionUtil.hasLogin(toUserChannel)) {
-            toUserChannel.writeAndFlush(messageResponsePacket);
-        } else {
-            log.info("[{}] 不在线，发送失败!", packet.getToUserId());
+        LocalDateTime now = LocalDateTime.now();
+
+        // 转发消息
+        ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());
+        switch (packet.getType()) {
+            case ChatTypeAttributes.CHANNEL:
+                SessionUtil.getAllChannels().forEach(ch -> {
+                    if (ch != channel) {
+                        channelGroup.add(ch);
+                    }
+                });
+                break;
+            case ChatTypeAttributes.GROUP:
+                // TODO：判断是否在存在群组并且用户在群组中
+                break;
+            case ChatTypeAttributes.USER:
+                // 判断是否存在用户
+                Account account = accountService.getById(packet.getTo());
+                if (account == null) {
+                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false, "该用户不存在！");
+                    channel.writeAndFlush(errorOperationResponsePacket);
+                    return;
+                }
+                // TODO：是否为好友
+                Channel ch = SessionUtil.getChannel(packet.getTo());
+                if (ch != null) {
+                    channelGroup.add(ch);
+                }
+                break;
+            default:
+                break;
         }
+        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getTo(), packet.getType(), session.getAvatar(), packet.getMessage(), now);
+        channelGroup.writeAndFlush(messageResponsePacket);
+
+        // 保存消息
+        Message message = Message.builder()
+                .fromId(session.getUserId())
+                .toId(packet.getTo())
+                .toType((int) packet.getType())
+                .createTime(now)
+                .build();
+        messageService.save(message);
+
+        // 发送成功响应
+        MessageSuccessPacket messageSuccessPacket = new MessageSuccessPacket(message.getId(), packet.getIndex(), true, "发送成功");
+        channel.writeAndFlush(messageSuccessPacket);
     }
 
     private void createGroup(ChannelHandlerContext ctx, CreateGroupRequestPacket packet) {
@@ -247,18 +287,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(responsePacket);
     }
 
-    private void groupMessage(Channel channel, GroupMessageRequestPacket packet) {
-        // 1.拿到 groupId 构造群聊消息的响应
-        int groupId = packet.getToGroupId();
-        GroupMessageResponsePacket responsePacket = new GroupMessageResponsePacket();
-        responsePacket.setFromGroupId(groupId);
-        responsePacket.setMessage(packet.getMessage());
-        responsePacket.setFromUser(SessionUtil.getSession(channel));
-        // 2. 拿到群聊对应的 channelGroup，写到每个客户端
-        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-        channelGroup.writeAndFlush(responsePacket);
-    }
-
     private void listGroupMembers(Channel channel, ListGroupMembersRequestPacket packet) {
         // 1. 获取群的 ChannelGroup
         int groupId = packet.getGroupId();
@@ -274,6 +302,10 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         responsePacket.setGroupId(groupId);
         responsePacket.setSessionList(sessionList);
         channel.writeAndFlush(responsePacket);
+    }
+
+    private void historyMessage(Channel channel, ChatMessageRequestPacket packet) {
+        log.info("historyMessage: {}", packet);
     }
 
 }

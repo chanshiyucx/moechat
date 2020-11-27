@@ -2,33 +2,27 @@ package com.chanshiyu.chat.protocol.request;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * @author SHIYU
- * @description 消息请求
- * @since 2020/11/9 17:28
+ * @description
+ * @since 2020/11/20 16:20
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-public class MessageRequestPacket extends Packet {
+public class ChatMessageRequestPacket extends Packet {
 
-    private int from;
-
-    private int to;
+    private int id;
 
     private byte type;
 
     private int index;
 
-    private String message;
-
     @Override
     public Byte getCommand() {
-        return Command.MESSAGE_REQUEST;
+        return Command.CHAT_MESSAGE_REQUEST;
     }
 
 }

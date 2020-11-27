@@ -44,4 +44,8 @@ public class ChatUtil {
         return userId > RedisAttributes.TOURIST_ID_START;
     }
 
+    public void saveAndSendMessage() {
+
+    }
+
 }

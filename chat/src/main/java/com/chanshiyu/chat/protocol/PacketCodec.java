@@ -8,10 +8,7 @@ import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import com.chanshiyu.common.util.CryptoAesUtil;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,9 +53,14 @@ public class PacketCodec {
         // 群聊成员
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestPacket.class);
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_RESPONSE, ListGroupMembersResponsePacket.class);
-        // 群聊消息
-        packetTypeMap.put(Command.GROUP_MESSAGE_REQUEST, GroupMessageRequestPacket.class);
-        packetTypeMap.put(Command.GROUP_MESSAGE_RESPONSE, GroupMessageResponsePacket.class);
+        // 聊天记录
+        packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
+        packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);
+        // 历史消息
+        packetTypeMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestPacket.class);
+        packetTypeMap.put(Command.CHAT_MESSAGE_RESPONSE, ChatMessageResponsePacket.class);
+        // 消息发送成功
+        packetTypeMap.put(Command.MESSAGE_SUCCESS_RESPONSE, MessageSuccessPacket.class);
         // 错误响应消息
         packetTypeMap.put(Command.ERROR_OPERATION_RESPONSE, ErrorOperationResponsePacket.class);
 

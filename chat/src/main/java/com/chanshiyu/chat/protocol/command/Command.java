@@ -55,20 +55,25 @@ public interface Command {
     byte LIST_GROUP_MEMBERS_RESPONSE = 16;
 
     /**
-     * 群聊消息
-     */
-    byte GROUP_MESSAGE_REQUEST = 17;
-    byte GROUP_MESSAGE_RESPONSE = 18;
-
-    /**
      * 聊天记录
      */
     byte CHAT_HISTORY_REQUEST = 19;
     byte CHAT_HISTORY_RESPONSE = 20;
 
     /**
+     * 历史消息
+     */
+    byte CHAT_MESSAGE_REQUEST = 21;
+    byte CHAT_MESSAGE_RESPONSE = 22;
+
+    /**
+     * 消息发送成功
+     */
+    byte MESSAGE_SUCCESS_RESPONSE = 101;
+
+    /**
      * 错误消息
      */
-    byte ERROR_OPERATION_RESPONSE = 101;
+    byte ERROR_OPERATION_RESPONSE = 102;
 
 }

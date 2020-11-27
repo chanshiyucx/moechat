@@ -1,6 +1,5 @@
 package com.chanshiyu.client.handler.response;
 
-import com.chanshiyu.chat.protocol.response.GroupMessageResponsePacket;
 import com.chanshiyu.chat.session.Session;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

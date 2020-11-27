@@ -1,4 +1,4 @@
-package com.chanshiyu.chat.protocol.request;
+package com.chanshiyu.chat.protocol.response;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
@@ -8,21 +8,25 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @author SHIYU
- * @description 群聊消息请求
- * @since 2020/11/11 9:10
+ * @description
+ * @since 2020/11/21 10:58
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-public class GroupMessageRequestPacket extends Packet {
+public class MessageSuccessPacket extends Packet {
 
-    private int toGroupId;
+    private int id;
+
+    private int index;
+
+    private boolean success;
 
     private String message;
 
     @Override
     public Byte getCommand() {
-        return Command.GROUP_MESSAGE_REQUEST;
+        return Command.MESSAGE_SUCCESS_RESPONSE;
     }
 
 }

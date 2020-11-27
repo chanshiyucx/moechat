@@ -5,6 +5,8 @@ import com.chanshiyu.chat.session.Session;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -51,6 +53,10 @@ public class SessionUtil {
 
     public static ChannelGroup getChannelGroup(int groupId) {
         return groupIdChannelGroupMap.get(groupId);
+    }
+
+    public static List<Channel> getAllChannels() {
+        return new ArrayList<>(userIdChannelMap.values());
     }
 
     public static long getChannelCountByIP(String ip) {

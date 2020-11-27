@@ -1,6 +1,5 @@
 package com.chanshiyu.client.console;
 
-import com.chanshiyu.chat.protocol.request.GroupMessageRequestPacket;
 import io.netty.channel.Channel;
 
 import java.util.Scanner;

@@ -53,6 +53,9 @@ public class PacketCodec {
         // 群聊成员
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestPacket.class);
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_RESPONSE, ListGroupMembersResponsePacket.class);
+        // 添加好友
+        packetTypeMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestPacket.class);
+        packetTypeMap.put(Command.ADD_FRIEND_RESPONSE, AddFriendResponsePacket.class);
         // 聊天记录
         packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
         packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);

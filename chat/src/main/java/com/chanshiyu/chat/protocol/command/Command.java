@@ -55,16 +55,28 @@ public interface Command {
     byte LIST_GROUP_MEMBERS_RESPONSE = 16;
 
     /**
+     * 添加好友
+     */
+    byte ADD_FRIEND_REQUEST = 17;
+    byte ADD_FRIEND_RESPONSE = 18;
+
+    /**
+     * 移除好友
+     */
+    byte REMOVE_FRIEND_REQUEST = 17;
+    byte REMOVE_FRIEND_RESPONSE = 18;
+
+    /**
      * 聊天记录
      */
-    byte CHAT_HISTORY_REQUEST = 19;
-    byte CHAT_HISTORY_RESPONSE = 20;
+    byte CHAT_HISTORY_REQUEST = 21;
+    byte CHAT_HISTORY_RESPONSE = 22;
 
     /**
      * 历史消息
      */
-    byte CHAT_MESSAGE_REQUEST = 21;
-    byte CHAT_MESSAGE_RESPONSE = 22;
+    byte CHAT_MESSAGE_REQUEST = 23;
+    byte CHAT_MESSAGE_RESPONSE = 24;
 
     /**
      * 消息发送成功

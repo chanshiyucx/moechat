@@ -1,7 +1,7 @@
 package com.chanshiyu.api.security.component;
 
 import cn.hutool.json.JSONUtil;
-import com.chanshiyu.mbg.model.vo.CommonResult;
+import com.chanshiyu.mbg.model.bo.CommonResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;

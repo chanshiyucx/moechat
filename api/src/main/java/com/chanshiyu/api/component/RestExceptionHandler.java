@@ -2,7 +2,7 @@ package com.chanshiyu.api.component;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.common.exception.BaseException;
-import com.chanshiyu.mbg.model.vo.CommonResult;
+import com.chanshiyu.mbg.model.bo.CommonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

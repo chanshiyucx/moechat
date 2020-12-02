@@ -26,13 +26,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +72,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.LIST_GROUP_MEMBERS_REQUEST:
                 listGroupMembers(channel, (ListGroupMembersRequestPacket) packet);
                 break;
+            case Command.ADD_FRIEND_REQUEST:
+                addFriend(channel, (AddFriendRequestPacket) packet);
+                break;
             case Command.CHAT_MESSAGE_REQUEST:
                 historyMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
@@ -81,6 +84,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         }
     }
 
+    /**
+     * 登录
+     */
     private void login(Channel channel, LoginRequestPacket packet) {
         String ip = channel.attr(ChannelAttributes.IP).get();
         if (StringUtils.isNotBlank(ip)) {
@@ -88,16 +94,14 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             IBlacklistService blacklistService = SpringUtil.getBean(IBlacklistService.class);
             if (blacklistService.isBlock(ip)) {
                 log.info("IP已被封禁：[{}]", ip);
-                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "IP已被封禁！");
-                channel.writeAndFlush(errorOperationResponsePacket);
+                ChatUtil.sendErrorMessage(channel, true, "IP已被封禁！");
                 return;
             }
 
             // ip 会话数检测
             if (SessionUtil.getChannelCountByIP(ip) >= 5) {
                 log.info("IP连接数已达最大值：[{}]", ip);
-                ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "请稍后再试喵！");
-                channel.writeAndFlush(errorOperationResponsePacket);
+                ChatUtil.sendErrorMessage(channel, true, "请稍后再试喵！");
                 return;
             }
         }
@@ -115,8 +119,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 String regex = "^[a-zA-Z0-9._-]{3,12}$";
                 if (!username.matches(regex) || !password.matches(regex)) {
                     log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
-                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false, "用户名和密码必须为3-12位数字字母下划线组合！");
-                    channel.writeAndFlush(errorOperationResponsePacket);
+                    ChatUtil.sendErrorMessage(channel, false, "用户名和密码必须为3-12位数字字母下划线组合！");
                     return;
                 }
                 account = accountService.registerOrLogin(username, password);
@@ -143,8 +146,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 errorMsg = "注册或登录失败!";
             }
             log.info("{}：[{}]", errorMsg, packet);
-            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false, errorMsg);
-            channel.writeAndFlush(errorOperationResponsePacket);
+            ChatUtil.sendErrorMessage(channel, false, errorMsg);
             return;
         }
 
@@ -152,8 +154,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         Channel oldChannel = SessionUtil.getChannel(account.getId());
         if (oldChannel != null) {
             log.info("用户[{}]已在别处登录，旧IP：[{}]，新IP：[{}]", account.getId(), oldChannel.attr(ChannelAttributes.IP).get(), ip);
-            ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(true, "该账户已在别处登录！");
-            oldChannel.writeAndFlush(errorOperationResponsePacket);
+            ChatUtil.sendErrorMessage(channel, false, "该账户已在别处登录！");
             SessionUtil.unBindSession(oldChannel);
         }
 
@@ -167,15 +168,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(loginResponsePacket);
         log.info("[{}]登录成功", session.getUsername());
 
-        // 推送世界频道和聊天群组记录
-        IChannelService channelService = SpringUtil.getBean(IChannelService.class);
-        List<Chat> chatList = channelService.getActiveChannelList().stream()
-                .map(ch -> new Chat(ch.getId(), ChatTypeAttributes.CHANNEL, ch.getName(), ch.getAvatar(), ch.getCreateTime()))
-                .collect(Collectors.toList());
-        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(chatList);
-        channel.writeAndFlush(chatHistoryResponsePacket);
+        // 刷新聊天列表
+        refreshChatList(channel);
     }
 
+    /**
+     * 登出
+     */
     private void logout(Channel channel, LogoutRequestPacket packet) {
         LogoutResponsePacket logoutResponsePacket = new LogoutResponsePacket();
         logoutResponsePacket.setSuccess(true);
@@ -183,6 +182,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         SessionUtil.unBindSession(channel);
     }
 
+    /**
+     * 发送消息
+     */
     private void message(ChannelHandlerContext ctx, MessageRequestPacket packet) {
         IMessageService messageService = SpringUtil.getBean(IMessageService.class);
         IAccountService accountService = SpringUtil.getBean(IAccountService.class);
@@ -207,8 +209,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 // 判断是否存在用户
                 Account account = accountService.getById(packet.getTo());
                 if (account == null) {
-                    ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(false, "该用户不存在！");
-                    channel.writeAndFlush(errorOperationResponsePacket);
+                    ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
                     return;
                 }
                 // TODO：是否为好友
@@ -304,8 +305,61 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(responsePacket);
     }
 
+    /**
+     * 添加好友
+     */
+    private void addFriend(Channel channel, AddFriendRequestPacket packet) {
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+
+        // 判断用户是否存在
+        Account account = accountService.getById(packet.getUserId());
+        if (account == null) {
+            ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
+            return;
+        }
+
+        // 判断是否已经是好友
+        Session session = SessionUtil.getSession(channel);
+        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
+        boolean isIn = chatSet.stream().anyMatch(bean -> {
+            Chat chat = (Chat) bean;
+            return chat.getId() == packet.getUserId() && chat.getType() == ChatTypeAttributes.USER;
+        });
+        if (isIn) {
+            ChatUtil.sendErrorMessage(channel, false, "该用户已添加！");
+            return;
+        }
+
+        // 入库
+        Chat chat = new Chat(packet.getUserId(), ChatTypeAttributes.USER, account.getNickname(), account.getAvatar(), LocalDateTime.now());
+        ChatUtil.addChatSet(session.getUserId(), chat);
+
+        // 刷新聊天列表
+        refreshChatList(channel);
+    }
+
     private void historyMessage(Channel channel, ChatMessageRequestPacket packet) {
         log.info("historyMessage: {}", packet);
+    }
+
+    /**
+     * 刷新聊天列表
+     */
+    private void refreshChatList(Channel channel) {
+        List<Chat> list = new ArrayList<>();
+        // 世界频道
+        IChannelService channelService = SpringUtil.getBean(IChannelService.class);
+        List<Chat> globalList = channelService.getActiveChannelList().stream()
+                .map(ch -> new Chat(ch.getId(), ChatTypeAttributes.CHANNEL, ch.getName(), ch.getAvatar(), ch.getCreateTime()))
+                .collect(Collectors.toList());
+        // 群组和好友
+        Session session = SessionUtil.getSession(channel);
+        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
+        List<Chat> chatList = chatSet.stream().map(ch -> (Chat) ch).collect(Collectors.toList());
+        list.addAll(globalList);
+        list.addAll(chatList);
+        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
+        channel.writeAndFlush(chatHistoryResponsePacket);
     }
 
 }

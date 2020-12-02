@@ -2,9 +2,14 @@ package com.chanshiyu.chat.util;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.RedisAttributes;
+import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.RedisService;
+import io.netty.channel.Channel;
+
+import java.util.Set;
 
 /**
  * @author SHIYU
@@ -44,7 +49,34 @@ public class ChatUtil {
         return userId > RedisAttributes.TOURIST_ID_START;
     }
 
-    public void saveAndSendMessage() {
+    /**
+     * 获取用户聊天列表
+     */
+    public static Set<Object> getChatSet(int userId) {
+        RedisService redis = getRedis();
+        return redis.sMembers(String.format(RedisAttributes.USER_CHAT_HISTORY, userId));
+    }
+
+    /**
+     * 加入用户聊天列表
+     */
+    public static void addChatSet(int userId, Chat chat) {
+        RedisService redis = getRedis();
+        redis.sAdd(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat);
+    }
+
+    /**
+     * 发送错误操作消息
+     */
+    public static void sendErrorMessage(Channel channel, boolean close, String message) {
+        ErrorOperationResponsePacket errorOperationResponsePacket = new ErrorOperationResponsePacket(close, message);
+        channel.writeAndFlush(errorOperationResponsePacket);
+    }
+
+    /**
+     * 发送消息并入库
+     */
+    public static void saveAndSendMessage() {
 
     }
 

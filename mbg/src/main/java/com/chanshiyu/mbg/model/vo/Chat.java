@@ -22,6 +22,6 @@ public class Chat {
 
     private String avatar;
 
-    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 
 }

@@ -1,8 +1,7 @@
 package com.chanshiyu.api.controller;
 
 
-import com.chanshiyu.mbg.model.vo.CommonResult;
-import io.swagger.annotations.ApiOperation;
+import com.chanshiyu.mbg.model.bo.CommonResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 

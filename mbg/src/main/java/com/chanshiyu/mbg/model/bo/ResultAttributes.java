@@ -1,4 +1,4 @@
-package com.chanshiyu.mbg.model.vo;
+package com.chanshiyu.mbg.model.bo;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

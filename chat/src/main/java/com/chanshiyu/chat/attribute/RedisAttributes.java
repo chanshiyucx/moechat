@@ -11,7 +11,7 @@ public interface RedisAttributes {
     String TOURIST_ID_KEY = "TOURIST_ID";
 
     // 游客 ID 起始值
-    int TOURIST_ID_START = 2000000;
+    int TOURIST_ID_START = 20000000;
 
     // 游客用户名
     String TOURIST_USERNAME = "TOURIST_%d";

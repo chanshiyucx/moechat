@@ -1,4 +1,4 @@
-package com.chanshiyu.mbg.model.vo;
+package com.chanshiyu.mbg.model.bo;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;

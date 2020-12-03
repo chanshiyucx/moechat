@@ -3,6 +3,7 @@ package com.chanshiyu.chat.disruptor.consumer;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.ChannelAttributes;
 import com.chanshiyu.chat.attribute.ChatTypeAttributes;
+import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.disruptor.wapper.TranslatorDataWrapper;
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
@@ -320,19 +321,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 判断是否已经是好友
         Session session = SessionUtil.getSession(channel);
-        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
-        boolean isIn = chatSet.stream().anyMatch(bean -> {
-            Chat chat = (Chat) bean;
-            return chat.getId() == packet.getUserId() && chat.getType() == ChatTypeAttributes.USER;
-        });
-        if (isIn) {
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
+        boolean isMember = ChatUtil.isChatMember(session.getUserId(), chat);
+        if (isMember) {
             ChatUtil.sendErrorMessage(channel, false, "该用户已添加！");
             return;
         }
 
-        // 入库
-        Chat chat = new Chat(packet.getUserId(), ChatTypeAttributes.USER, account.getNickname(), account.getAvatar(), LocalDateTime.now());
-        ChatUtil.addChatSet(session.getUserId(), chat);
+        // 存入缓存
+        ChatUtil.addChatHistory(session.getUserId(), chat, System.currentTimeMillis());
 
         // 刷新聊天列表
         refreshChatList(channel);
@@ -353,13 +350,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 .map(ch -> new Chat(ch.getId(), ChatTypeAttributes.CHANNEL, ch.getName(), ch.getAvatar(), ch.getCreateTime()))
                 .collect(Collectors.toList());
         // 群组和好友
-        Session session = SessionUtil.getSession(channel);
-        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
-        List<Chat> chatList = chatSet.stream().map(ch -> (Chat) ch).collect(Collectors.toList());
-        list.addAll(globalList);
-        list.addAll(chatList);
-        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
-        channel.writeAndFlush(chatHistoryResponsePacket);
+//        Session session = SessionUtil.getSession(channel);
+//        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
+//        List<Chat> chatList = chatSet.stream().map(ch -> (Chat) ch).collect(Collectors.toList());
+//        list.addAll(globalList);
+//        list.addAll(chatList);
+//        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
+//        channel.writeAndFlush(chatHistoryResponsePacket);
     }
 
 }

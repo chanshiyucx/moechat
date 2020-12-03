@@ -5,7 +5,6 @@ import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
-import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.RedisService;
 import io.netty.channel.Channel;
 
@@ -50,19 +49,67 @@ public class ChatUtil {
     }
 
     /**
-     * 获取用户聊天列表
+     * 设置用户和群组昵称
      */
-    public static Set<Object> getChatSet(int userId) {
+    public static void setNickname(int id, byte type, String nickname) {
         RedisService redis = getRedis();
-        return redis.sMembers(String.format(RedisAttributes.USER_CHAT_HISTORY, userId));
+        redis.set(String.format(RedisAttributes.NICKNAME, id, type), nickname);
+    }
+
+    /**
+     * 获取用户和群组昵称
+     */
+    public static String getNickname(int id, byte type) {
+        RedisService redis = getRedis();
+        return (String) redis.get(String.format(RedisAttributes.NICKNAME, id, type));
+    }
+
+    /**
+     * 设置用户和群组头像
+     */
+    public static void setAvatar(int id, byte type, String avatar) {
+        RedisService redis = getRedis();
+        redis.set(String.format(RedisAttributes.AVATAR, id, type), avatar);
+    }
+
+    /**
+     * 获取用户和群组头像
+     */
+    public static String getAvatar(int id, byte type) {
+        RedisService redis = getRedis();
+        return (String) redis.get(String.format(RedisAttributes.AVATAR, id, type));
     }
 
     /**
      * 加入用户聊天列表
      */
-    public static void addChatSet(int userId, Chat chat) {
+    public static void addChatHistory(int userId, String chat, double time) {
         RedisService redis = getRedis();
-        redis.sAdd(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat);
+        redis.zAdd(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat, time);
+    }
+
+    /**
+     * 获取用户聊天列表
+     */
+    public static Set<Object> getChatHistory(int userId) {
+        RedisService redis = getRedis();
+        return redis.zReverseRangeByScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, System.currentTimeMillis());
+    }
+
+    /**
+     * 移除聊天成员
+     */
+    public static boolean removeChatHistory(int userId, String chat) {
+        RedisService redis = getRedis();
+        return redis.zRemove(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) > 0;
+    }
+
+    /**
+     * 判断是否为聊天成员
+     */
+    public static boolean isChatMember(int userId, String chat) {
+        RedisService redis = getRedis();
+        return redis.zScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) != null;
     }
 
     /**

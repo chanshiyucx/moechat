@@ -16,7 +16,16 @@ public interface RedisAttributes {
     // 游客用户名
     String TOURIST_USERNAME = "TOURIST_%d";
 
-    // 用户的聊天记录
+    // 用户和群组昵称
+    String NICKNAME = "NICKNAME_%d_%d";
+
+    // 用户和群组头像
+    String AVATAR = "AVATAR_%d_%d";
+
+    // 用户的聊天记录项目（id, 类型）
+    String USER_CHAT_ITEM = "CHAT_ITEM_%d_%d";
+
+    // 用户的聊天记录表
     String USER_CHAT_HISTORY = "CHAT_HISTORY_%d";
 
 }

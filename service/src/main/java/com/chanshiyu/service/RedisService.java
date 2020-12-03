@@ -142,6 +142,26 @@ public interface RedisService {
     Long sRemove(String key, Object... values);
 
     /**
+     * 向Sorted Set结构中添加属性
+     */
+    Boolean zAdd(String key, Object value, double score);
+
+    /**
+     * 删除Sorted Set结构中的属性
+     */
+    Long zRemove(String key, Object... values);
+
+    /**
+     * 获取Sorted Set结构
+     */
+    Set<Object> zReverseRangeByScore(String key, long start, long end);
+
+    /**
+     * 是否为Sorted Set中的属性
+     */
+    Double zScore(String key, Object value);
+
+    /**
      * 获取List结构中的属性
      */
     List<Object> lRange(String key, long start, long end);

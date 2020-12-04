@@ -30,6 +30,11 @@ spring:
         max-wait: -1ms
         max-idle: 8
         min-idle: 0
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
 
 mybatis-plus:
   mapper-locations: classpath:mappers/*.xml

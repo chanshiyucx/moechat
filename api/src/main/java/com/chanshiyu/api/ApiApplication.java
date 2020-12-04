@@ -1,11 +1,7 @@
 package com.chanshiyu.api;
 
-import com.chanshiyu.chat.attribute.CryptoAttributes;
 import com.chanshiyu.chat.disruptor.RingBufferWorkerPoolFactory;
 import com.chanshiyu.chat.disruptor.consumer.MessageConsumer;
-import com.chanshiyu.chat.protocol.request.LoginRequestPacket;
-import com.chanshiyu.chat.serialize.Serializer;
-import com.chanshiyu.common.util.CryptoAesUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.mybatis.spring.annotation.MapperScan;
@@ -15,7 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import javax.annotation.PostConstruct;
 import java.security.Security;
+import java.util.TimeZone;
 
 /**
  * @author SHIYU
@@ -31,6 +29,11 @@ public class ApiApplication {
     @Bean
     public SpringUtil getSpringUtil() {
         return new SpringUtil();
+    }
+
+    @PostConstruct
+    void setDefaultTimezone() {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+8"));
     }
 
     public static void main(String[] args) {

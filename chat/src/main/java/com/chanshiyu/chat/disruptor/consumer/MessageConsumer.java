@@ -328,8 +328,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             return;
         }
 
+        // 判断好友数量是否已达到上线
+        long size = ChatUtil.getChatHistorySize(session.getUserId());
+        if (size >= 100) {
+            ChatUtil.sendErrorMessage(channel, false, "好友和群组数已达上限，无法添加！");
+            return;
+        }
+
         // 存入缓存
-        ChatUtil.addChatHistory(session.getUserId(), chat, System.currentTimeMillis());
+        ChatUtil.addChatHistory(session.getUserId(), chat);
 
         // 刷新聊天列表
         refreshChatList(channel);

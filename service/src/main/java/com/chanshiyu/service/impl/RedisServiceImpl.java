@@ -4,6 +4,7 @@ import com.chanshiyu.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -167,13 +168,18 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public Set<Object> zReverseRangeByScore(String key, double min, double max) {
-        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max);
+    public Set<ZSetOperations.TypedTuple<Object>> zReverseRangeWithScores(String key, long start, long end) {
+        return redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end);
     }
 
     @Override
     public Double zScore(String key, Object value) {
         return redisTemplate.opsForZSet().score(key, value);
+    }
+
+    @Override
+    public Long zSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
     }
 
     @Override

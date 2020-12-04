@@ -1,5 +1,7 @@
 package com.chanshiyu.service;
 
+import org.springframework.data.redis.core.ZSetOperations;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,14 +154,19 @@ public interface RedisService {
     Long zRemove(String key, Object... values);
 
     /**
-     * 获取Sorted Set结构
+     * 获取Sorted Set结构，从大到小排序, 并返回score值
      */
-    Set<Object> zReverseRangeByScore(String key, double min, double max);
+    Set<ZSetOperations.TypedTuple<Object>>  zReverseRangeWithScores(String key, long start, long end);
 
     /**
      * 是否为Sorted Set中的属性
      */
     Double zScore(String key, Object value);
+
+    /**
+     * 获取Sorted Set结构的长度
+     */
+    Long zSize(String key);
 
     /**
      * 获取List结构中的属性

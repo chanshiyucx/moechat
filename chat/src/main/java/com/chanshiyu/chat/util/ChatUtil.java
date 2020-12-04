@@ -8,7 +8,11 @@ import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.RedisService;
 import io.netty.channel.Channel;
+import org.springframework.data.redis.core.ZSetOperations;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -87,9 +91,9 @@ public class ChatUtil {
     /**
      * 加入用户聊天列表
      */
-    public static void addChatHistory(int userId, String chat, double time) {
+    public static void addChatHistory(int userId, String chat) {
         RedisService redis = getRedis();
-        redis.zAdd(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat, time);
+        redis.zAdd(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat, System.currentTimeMillis());
     }
 
     /**
@@ -97,8 +101,22 @@ public class ChatUtil {
      */
     public static List<Chat> getChatHistory(int userId) {
         RedisService redis = getRedis();
-        Set<Object> chatSet = redis.zReverseRangeByScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, System.currentTimeMillis());
-        return new ArrayList<>(chatSet).stream().map(bean -> (Chat) bean).collect(Collectors.toList());
+        Set<ZSetOperations.TypedTuple<Object>> chatSet = redis.zReverseRangeWithScores(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, -1);
+        return new ArrayList<>(chatSet).stream()
+                .map(bean -> {
+                    String value = (String) bean.getValue();
+                    Double score = bean.getScore();
+                    assert value != null;
+                    assert score != null;
+                    String[] rest = value.split("_");
+                    int id = Integer.parseInt(rest[2]);
+                    byte type = Byte.parseByte(rest[3]);
+                    String nickname = getNickname(id, type);
+                    String avatar = getAvatar(id, type);
+                    LocalDateTime time = Instant.ofEpochMilli(score.longValue()).atZone(ZoneOffset.ofHours(8)).toLocalDateTime();
+                    return new Chat(id, type, nickname, avatar, time);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -107,6 +125,14 @@ public class ChatUtil {
     public static boolean removeChatHistory(int userId, String chat) {
         RedisService redis = getRedis();
         return redis.zRemove(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) > 0;
+    }
+
+    /**
+     * 获取用户聊天列表大小
+     */
+    public static long getChatHistorySize(int userId) {
+        RedisService redis = getRedis();
+        return redis.zSize(String.format(RedisAttributes.USER_CHAT_HISTORY, userId));
     }
 
     /**

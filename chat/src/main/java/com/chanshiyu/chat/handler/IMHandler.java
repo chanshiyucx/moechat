@@ -27,12 +27,12 @@ public class IMHandler extends SimpleChannelInboundHandler<Packet> {
         handlerMap = new HashMap<>();
         handlerMap.put(Command.LOGOUT_REQUEST, LogoutRequestHandler.INSTANCE);
         handlerMap.put(Command.MESSAGE_REQUEST, MessageRequestHandler.INSTANCE);
+        handlerMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestHandler.INSTANCE);
+        handlerMap.put(Command.REMOVE_FRIEND_REQUEST, RemoveFriendRequestHandler.INSTANCE);
         handlerMap.put(Command.CREATE_GROUP_REQUEST, CreateGroupRequestHandler.INSTANCE);
         handlerMap.put(Command.JOIN_GROUP_REQUEST, JoinGroupRequestHandler.INSTANCE);
         handlerMap.put(Command.QUIT_GROUP_REQUEST, QuitGroupRequestHandler.INSTANCE);
         handlerMap.put(Command.LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestHandler.INSTANCE);
-        handlerMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestHandler.INSTANCE);
-        handlerMap.put(Command.REMOVE_FRIEND_REQUEST, RemoveFriendRequestHandler.INSTANCE);
         handlerMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestHandler.INSTANCE);
     }
 

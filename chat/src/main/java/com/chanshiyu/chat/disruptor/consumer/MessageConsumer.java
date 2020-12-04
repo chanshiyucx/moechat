@@ -61,6 +61,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.MESSAGE_REQUEST:
                 message(ctx, (MessageRequestPacket) packet);
                 break;
+            case Command.ADD_FRIEND_REQUEST:
+                addFriend(channel, (AddFriendRequestPacket) packet);
+                break;
+            case Command.REMOVE_FRIEND_REQUEST:
+                removeFriend(channel, (RemoveFriendRequestPacket) packet);
+                break;
             case Command.CREATE_GROUP_REQUEST:
                 createGroup(ctx, (CreateGroupRequestPacket) packet);
                 break;
@@ -73,14 +79,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.LIST_GROUP_MEMBERS_REQUEST:
                 listGroupMembers(channel, (ListGroupMembersRequestPacket) packet);
                 break;
-            case Command.ADD_FRIEND_REQUEST:
-                addFriend(channel, (AddFriendRequestPacket) packet);
-                break;
-            case Command.REMOVE_FRIEND_REQUEST:
-                removeFriend(channel, (RemoveFriendRequestPacket) packet);
-                break;
             case Command.CHAT_MESSAGE_REQUEST:
-                historyMessage(channel, (ChatMessageRequestPacket) packet);
+                chatMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
             default:
                 log.error("command -> {} , 该消息未被处理", command);
@@ -242,6 +242,53 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(messageSuccessPacket);
     }
 
+    /**
+     * 添加好友
+     */
+    private void addFriend(Channel channel, AddFriendRequestPacket packet) {
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+
+        // 判断用户是否存在
+        Account account = accountService.getById(packet.getUserId());
+        if (account == null) {
+            ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
+            return;
+        }
+
+        // 判断是否已经是好友
+        Session session = SessionUtil.getSession(channel);
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
+        boolean isMember = ChatUtil.isChatMember(session.getUserId(), chat);
+        if (isMember) {
+            ChatUtil.sendErrorMessage(channel, false, "该用户已添加！");
+            return;
+        }
+
+        // 判断好友数量是否已达到上线
+        long size = ChatUtil.getChatHistorySize(session.getUserId());
+        if (size >= 100) {
+            ChatUtil.sendErrorMessage(channel, false, "好友和群组数已达上限，无法添加！");
+            return;
+        }
+
+        // 存入缓存
+        ChatUtil.addChatHistory(session.getUserId(), chat);
+
+        // 刷新聊天列表
+        refreshChatList(channel);
+    }
+
+    /**
+     * 移除好友
+     */
+    private void removeFriend(Channel channel, RemoveFriendRequestPacket packet) {
+        Session session = SessionUtil.getSession(channel);
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
+        ChatUtil.removeChatHistory(session.getUserId(), chat);
+        RemoveFriendResponsePacket removeFriendResponsePacket = new RemoveFriendResponsePacket(true, "移除成功！");
+        channel.writeAndFlush(removeFriendResponsePacket);
+    }
+
     private void createGroup(ChannelHandlerContext ctx, CreateGroupRequestPacket packet) {
         List<Integer> userIdList = packet.getUserIdList();
         List<String> userNameList = new ArrayList<>();
@@ -309,54 +356,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(responsePacket);
     }
 
-    /**
-     * 添加好友
-     */
-    private void addFriend(Channel channel, AddFriendRequestPacket packet) {
-        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
-
-        // 判断用户是否存在
-        Account account = accountService.getById(packet.getUserId());
-        if (account == null) {
-            ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
-            return;
-        }
-
-        // 判断是否已经是好友
-        Session session = SessionUtil.getSession(channel);
-        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
-        boolean isMember = ChatUtil.isChatMember(session.getUserId(), chat);
-        if (isMember) {
-            ChatUtil.sendErrorMessage(channel, false, "该用户已添加！");
-            return;
-        }
-
-        // 判断好友数量是否已达到上线
-        long size = ChatUtil.getChatHistorySize(session.getUserId());
-        if (size >= 100) {
-            ChatUtil.sendErrorMessage(channel, false, "好友和群组数已达上限，无法添加！");
-            return;
-        }
-
-        // 存入缓存
-        ChatUtil.addChatHistory(session.getUserId(), chat);
-
-        // 刷新聊天列表
-        refreshChatList(channel);
-    }
-
-    /**
-     * 移除好友
-     */
-    private void removeFriend(Channel channel, RemoveFriendRequestPacket packet) {
-        Session session = SessionUtil.getSession(channel);
-        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
-        ChatUtil.removeChatHistory(session.getUserId(), chat);
-        RemoveFriendResponsePacket removeFriendResponsePacket = new RemoveFriendResponsePacket(true, "移除成功");
-        channel.writeAndFlush(removeFriendResponsePacket);
-    }
-
-    private void historyMessage(Channel channel, ChatMessageRequestPacket packet) {
+    private void chatMessage(Channel channel, ChatMessageRequestPacket packet) {
         log.info("historyMessage: {}", packet);
     }
 

@@ -41,6 +41,12 @@ public class PacketCodec {
         // 消息
         packetTypeMap.put(Command.MESSAGE_REQUEST, MessageRequestPacket.class);
         packetTypeMap.put(Command.MESSAGE_RESPONSE, MessageResponsePacket.class);
+        // 添加好友
+        packetTypeMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestPacket.class);
+        packetTypeMap.put(Command.ADD_FRIEND_RESPONSE, AddFriendResponsePacket.class);
+        // 移除好友
+        packetTypeMap.put(Command.REMOVE_FRIEND_REQUEST, RemoveFriendRequestPacket.class);
+        packetTypeMap.put(Command.REMOVE_FRIEND_RESPONSE, RemoveFriendResponsePacket.class);
         // 创建群聊
         packetTypeMap.put(Command.CREATE_GROUP_REQUEST, CreateGroupRequestPacket.class);
         packetTypeMap.put(Command.CREATE_GROUP_RESPONSE, CreateGroupResponsePacket.class);
@@ -53,12 +59,6 @@ public class PacketCodec {
         // 群聊成员
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestPacket.class);
         packetTypeMap.put(Command.LIST_GROUP_MEMBERS_RESPONSE, ListGroupMembersResponsePacket.class);
-        // 添加好友
-        packetTypeMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestPacket.class);
-        packetTypeMap.put(Command.ADD_FRIEND_RESPONSE, AddFriendResponsePacket.class);
-        // 移除好友
-        packetTypeMap.put(Command.REMOVE_FRIEND_REQUEST, RemoveFriendRequestPacket.class);
-        packetTypeMap.put(Command.REMOVE_FRIEND_RESPONSE, RemoveFriendResponsePacket.class);
         // 聊天记录
         packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
         packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);

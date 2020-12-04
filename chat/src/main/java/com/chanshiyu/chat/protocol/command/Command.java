@@ -31,40 +31,40 @@ public interface Command {
     byte MESSAGE_RESPONSE = 8;
 
     /**
-     * 创建群聊
-     */
-    byte CREATE_GROUP_REQUEST = 9;
-    byte CREATE_GROUP_RESPONSE = 10;
-
-    /**
-     * 加入群聊
-     */
-    byte JOIN_GROUP_REQUEST = 11;
-    byte JOIN_GROUP_RESPONSE = 12;
-
-    /**
-     * 退出群聊
-     */
-    byte QUIT_GROUP_REQUEST = 13;
-    byte QUIT_GROUP_RESPONSE = 14;
-
-    /**
-     * 群成员
-     */
-    byte LIST_GROUP_MEMBERS_REQUEST = 15;
-    byte LIST_GROUP_MEMBERS_RESPONSE = 16;
-
-    /**
      * 添加好友
      */
-    byte ADD_FRIEND_REQUEST = 17;
-    byte ADD_FRIEND_RESPONSE = 18;
+    byte ADD_FRIEND_REQUEST = 9;
+    byte ADD_FRIEND_RESPONSE = 10;
 
     /**
      * 移除好友
      */
-    byte REMOVE_FRIEND_REQUEST = 19;
-    byte REMOVE_FRIEND_RESPONSE = 20;
+    byte REMOVE_FRIEND_REQUEST = 11;
+    byte REMOVE_FRIEND_RESPONSE = 12;
+
+    /**
+     * 创建群聊
+     */
+    byte CREATE_GROUP_REQUEST = 13;
+    byte CREATE_GROUP_RESPONSE = 14;
+
+    /**
+     * 加入群聊
+     */
+    byte JOIN_GROUP_REQUEST = 15;
+    byte JOIN_GROUP_RESPONSE = 16;
+
+    /**
+     * 退出群聊
+     */
+    byte QUIT_GROUP_REQUEST = 17;
+    byte QUIT_GROUP_RESPONSE = 18;
+
+    /**
+     * 群成员
+     */
+    byte LIST_GROUP_MEMBERS_REQUEST = 19;
+    byte LIST_GROUP_MEMBERS_RESPONSE = 20;
 
     /**
      * 聊天记录

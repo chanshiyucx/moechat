@@ -76,6 +76,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.ADD_FRIEND_REQUEST:
                 addFriend(channel, (AddFriendRequestPacket) packet);
                 break;
+            case Command.REMOVE_FRIEND_REQUEST:
+                removeFriend(channel, (RemoveFriendRequestPacket) packet);
+                break;
             case Command.CHAT_MESSAGE_REQUEST:
                 historyMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
@@ -340,6 +343,17 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 刷新聊天列表
         refreshChatList(channel);
+    }
+
+    /**
+     * 移除好友
+     */
+    private void removeFriend(Channel channel, RemoveFriendRequestPacket packet) {
+        Session session = SessionUtil.getSession(channel);
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
+        ChatUtil.removeChatHistory(session.getUserId(), chat);
+        RemoveFriendResponsePacket removeFriendResponsePacket = new RemoveFriendResponsePacket(true, "移除成功");
+        channel.writeAndFlush(removeFriendResponsePacket);
     }
 
     private void historyMessage(Channel channel, ChatMessageRequestPacket packet) {

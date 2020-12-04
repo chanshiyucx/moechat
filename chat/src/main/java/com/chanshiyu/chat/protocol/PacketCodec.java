@@ -56,6 +56,9 @@ public class PacketCodec {
         // 添加好友
         packetTypeMap.put(Command.ADD_FRIEND_REQUEST, AddFriendRequestPacket.class);
         packetTypeMap.put(Command.ADD_FRIEND_RESPONSE, AddFriendResponsePacket.class);
+        // 移除好友
+        packetTypeMap.put(Command.REMOVE_FRIEND_REQUEST, RemoveFriendRequestPacket.class);
+        packetTypeMap.put(Command.REMOVE_FRIEND_RESPONSE, RemoveFriendResponsePacket.class);
         // 聊天记录
         packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
         packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);

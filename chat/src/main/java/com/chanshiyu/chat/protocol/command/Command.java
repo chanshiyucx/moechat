@@ -63,8 +63,8 @@ public interface Command {
     /**
      * 移除好友
      */
-    byte REMOVE_FRIEND_REQUEST = 17;
-    byte REMOVE_FRIEND_RESPONSE = 18;
+    byte REMOVE_FRIEND_REQUEST = 19;
+    byte REMOVE_FRIEND_RESPONSE = 20;
 
     /**
      * 聊天记录

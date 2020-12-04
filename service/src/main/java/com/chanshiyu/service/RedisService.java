@@ -154,7 +154,7 @@ public interface RedisService {
     /**
      * 获取Sorted Set结构
      */
-    Set<Object> zReverseRangeByScore(String key, long start, long end);
+    Set<Object> zReverseRangeByScore(String key, double min, double max);
 
     /**
      * 是否为Sorted Set中的属性

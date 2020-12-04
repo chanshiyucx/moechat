@@ -350,13 +350,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 .map(ch -> new Chat(ch.getId(), ChatTypeAttributes.CHANNEL, ch.getName(), ch.getAvatar(), ch.getCreateTime()))
                 .collect(Collectors.toList());
         // 群组和好友
-//        Session session = SessionUtil.getSession(channel);
-//        Set<Object> chatSet = ChatUtil.getChatSet(session.getUserId());
-//        List<Chat> chatList = chatSet.stream().map(ch -> (Chat) ch).collect(Collectors.toList());
-//        list.addAll(globalList);
-//        list.addAll(chatList);
-//        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
-//        channel.writeAndFlush(chatHistoryResponsePacket);
+        Session session = SessionUtil.getSession(channel);
+        List<Chat> chatList = ChatUtil.getChatHistory(session.getUserId());
+        list.addAll(globalList);
+        list.addAll(chatList);
+        ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
+        channel.writeAndFlush(chatHistoryResponsePacket);
     }
 
 }

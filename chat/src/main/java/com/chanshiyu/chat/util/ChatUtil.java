@@ -5,10 +5,14 @@ import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.service.RedisService;
 import io.netty.channel.Channel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author SHIYU
@@ -91,9 +95,10 @@ public class ChatUtil {
     /**
      * 获取用户聊天列表
      */
-    public static Set<Object> getChatHistory(int userId) {
+    public static List<Chat> getChatHistory(int userId) {
         RedisService redis = getRedis();
-        return redis.zReverseRangeByScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, System.currentTimeMillis());
+        Set<Object> chatSet = redis.zReverseRangeByScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, System.currentTimeMillis());
+        return new ArrayList<>(chatSet).stream().map(bean -> (Chat) bean).collect(Collectors.toList());
     }
 
     /**

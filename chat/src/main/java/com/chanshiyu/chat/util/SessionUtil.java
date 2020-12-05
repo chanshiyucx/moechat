@@ -20,6 +20,10 @@ public class SessionUtil {
     private static final Map<Integer, Channel> userIdChannelMap = new ConcurrentHashMap<>();
 
     public static void bindSession(Session session, Channel channel) {
+        if (hasLogin(channel)) {
+            Session oldSession = getSession(channel);
+            userIdChannelMap.remove(oldSession.getUserId());
+        }
         userIdChannelMap.put(session.getUserId(), channel);
         channel.attr(ChannelAttributes.SESSION).set(session);
     }

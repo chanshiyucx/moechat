@@ -93,6 +93,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 登录
      */
     private void login(Channel channel, LoginRequestPacket packet) {
+        log.info("before count: {}", SessionUtil.getAllChannels().size());
+
         String ip = channel.attr(ChannelAttributes.IP).get();
         if (StringUtils.isNotBlank(ip)) {
             // ip 黑名单检测
@@ -175,6 +177,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 刷新聊天列表
         refreshChatList(channel);
+
+        log.info("after count: {}", SessionUtil.getAllChannels().size());
     }
 
     /**
@@ -330,12 +334,18 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 频道和群组成员列表（只显示在线成员）
      */
     private void listMembers(Channel channel, ListMembersRequestPacket packet) {
+
+        log.info("channel session: {}, count: {}", SessionUtil.getSession(channel), SessionUtil.getAllChannels().size());
+
         List<User> userList;
         if (packet.getType() == ChatTypeAttributes.CHANNEL) {
             // 频道
             userList = SessionUtil.getAllChannels().stream()
                     .map(SessionUtil::getSession)
-                    .filter(session -> !ChatUtil.isTourist(session.getUserId()))
+                    .filter(session -> {
+                        log.info("session: {}", session);
+                        return !ChatUtil.isTourist(session.getUserId());
+                    })
                     .map(session -> {
                         User user = new User();
                         BeanUtils.copyProperties(session, user);

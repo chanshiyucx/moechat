@@ -12,13 +12,15 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ListGroupMembersRequestPacket extends Packet {
+public class ListMembersRequestPacket extends Packet {
 
-    private int groupId;
+    private int id;
+
+    private byte type;
 
     @Override
     public Byte getCommand() {
-        return Command.LIST_GROUP_MEMBERS_REQUEST;
+        return Command.LIST_MEMBERS_REQUEST;
     }
 
 }

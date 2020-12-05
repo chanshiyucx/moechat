@@ -17,6 +17,7 @@ import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.entity.Message;
 import com.chanshiyu.mbg.model.vo.Chat;
+import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
 import com.chanshiyu.service.IChannelService;
@@ -28,12 +29,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +51,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChannelHandlerContext ctx = wrapper.getCtx();
         byte command = packet.getCommand();
         Channel channel = ctx.channel();
-        log.info("消费消息：{}", command);
+        // log.info("消费消息：{}", command);
         switch (command) {
             case Command.LOGIN_REQUEST:
                 login(channel, (LoginRequestPacket) packet);
@@ -68,7 +69,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 removeFriend(channel, (RemoveFriendRequestPacket) packet);
                 break;
             case Command.CREATE_GROUP_REQUEST:
-                createGroup(ctx, (CreateGroupRequestPacket) packet);
+                createGroup(channel, (CreateGroupRequestPacket) packet);
                 break;
             case Command.JOIN_GROUP_REQUEST:
                 joinGroup(channel, (JoinGroupRequestPacket) packet);
@@ -76,8 +77,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.QUIT_GROUP_REQUEST:
                 quitGroup(channel, (QuitGroupRequestPacket) packet);
                 break;
-            case Command.LIST_GROUP_MEMBERS_REQUEST:
-                listGroupMembers(channel, (ListGroupMembersRequestPacket) packet);
+            case Command.LIST_MEMBERS_REQUEST:
+                listMembers(channel, (ListMembersRequestPacket) packet);
                 break;
             case Command.CHAT_MESSAGE_REQUEST:
                 chatMessage(channel, (ChatMessageRequestPacket) packet);
@@ -158,7 +159,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         Channel oldChannel = SessionUtil.getChannel(account.getId());
         if (oldChannel != null) {
             log.info("用户[{}]已在别处登录，旧IP：[{}]，新IP：[{}]", account.getId(), oldChannel.attr(ChannelAttributes.IP).get(), ip);
-            ChatUtil.sendErrorMessage(channel, false, "该账户已在别处登录！");
+            ChatUtil.sendErrorMessage(oldChannel, true, "该账户已在别处登录！");
             SessionUtil.unBindSession(oldChannel);
         }
 
@@ -289,71 +290,64 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(removeFriendResponsePacket);
     }
 
-    private void createGroup(ChannelHandlerContext ctx, CreateGroupRequestPacket packet) {
-        List<Integer> userIdList = packet.getUserIdList();
-        List<String> userNameList = new ArrayList<>();
-        // 1. 创建一个 channel 分组
-        ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());
-        // 2. 筛选出待加入群聊的用户的 channel 和 userName
-        for (int userId : userIdList) {
-            Channel channel = SessionUtil.getChannel(userId);
-            if (channel != null) {
-                channelGroup.add(channel);
-                userNameList.add(SessionUtil.getSession(channel).getUsername());
-            }
+    private void createGroup(Channel channel, CreateGroupRequestPacket packet) {
+        String regex = "^[a-zA-Z0-9._-\\u4e00-\\u9fa5]{3,12}$";
+        String name = packet.getName();
+        if (!name.matches(regex)) {
+            log.info("群名称格式错误，name: [{}]", name);
+            ChatUtil.sendErrorMessage(channel, false, "群组名称必须为3-12位数字字母下划线中文组合！");
+            return;
         }
-        // 3. 创建群聊创建结果的响应
-//        long groupId = IDUtil.randomId();
-//        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket();
-//        createGroupResponsePacket.setSuccess(true);
-//        createGroupResponsePacket.setGroupId(groupId);
-//        createGroupResponsePacket.setUsernameList(userNameList);
-//        // 4. 给每个客户端发送拉群通知
-//        channelGroup.writeAndFlush(createGroupResponsePacket);
-//        // 5. 保存群组相关的信息
-//        SessionUtil.bindChannelGroup(groupId, channelGroup);
-//        log.info("群创建成功，id：{}, 群成员：{}", createGroupResponsePacket.getGroupId(), createGroupResponsePacket.getUsernameList());
+        Session session = SessionUtil.getSession(channel);
+
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
         // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 添加进去
-        int groupId = packet.getGroupId();
-        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-        channelGroup.add(channel);
-        // 2. 构造加群响应发送给客户端
-        JoinGroupResponsePacket responsePacket = new JoinGroupResponsePacket();
-        responsePacket.setSuccess(true);
-        responsePacket.setGroupId(groupId);
-        channel.writeAndFlush(responsePacket);
+//        int groupId = packet.getGroupId();
+//        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
+//        channelGroup.add(channel);
+//        // 2. 构造加群响应发送给客户端
+//        JoinGroupResponsePacket responsePacket = new JoinGroupResponsePacket();
+//        responsePacket.setSuccess(true);
+//        responsePacket.setGroupId(groupId);
+//        channel.writeAndFlush(responsePacket);
     }
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
         // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 移除
-        int groupId = packet.getGroupId();
-        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-        channelGroup.remove(channel);
-        // 2. 构造退群响应发送给客户端
-        QuitGroupResponsePacket responsePacket = new QuitGroupResponsePacket();
-        responsePacket.setGroupId(packet.getGroupId());
-        responsePacket.setSuccess(true);
-        channel.writeAndFlush(responsePacket);
+//        int groupId = packet.getGroupId();
+//        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
+//        channelGroup.remove(channel);
+//        // 2. 构造退群响应发送给客户端
+//        QuitGroupResponsePacket responsePacket = new QuitGroupResponsePacket();
+//        responsePacket.setGroupId(packet.getGroupId());
+//        responsePacket.setSuccess(true);
+//        channel.writeAndFlush(responsePacket);
     }
 
-    private void listGroupMembers(Channel channel, ListGroupMembersRequestPacket packet) {
-        // 1. 获取群的 ChannelGroup
-        int groupId = packet.getGroupId();
-        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-        // 2. 遍历群成员的 channel，对应的 session，构造群成员的信息
-        List<Session> sessionList = new ArrayList<>();
-        for (Channel ch : channelGroup) {
-            Session session = SessionUtil.getSession(ch);
-            sessionList.add(session);
+    /**
+     * 频道和群组成员列表（只显示在线成员）
+     */
+    private void listMembers(Channel channel, ListMembersRequestPacket packet) {
+        List<User> userList;
+        if (packet.getType() == ChatTypeAttributes.CHANNEL) {
+            // 频道
+            userList = SessionUtil.getAllChannels().stream()
+                    .map(SessionUtil::getSession)
+                    .filter(session -> !ChatUtil.isTourist(session.getUserId()))
+                    .map(session -> {
+                        User user = new User();
+                        BeanUtils.copyProperties(session, user);
+                        return user;
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            // 群组
+            userList = new ArrayList<>();
         }
-        // 3. 构建获取成员列表响应写回到客户端
-        ListGroupMembersResponsePacket responsePacket = new ListGroupMembersResponsePacket();
-        responsePacket.setGroupId(groupId);
-        responsePacket.setSessionList(sessionList);
-        channel.writeAndFlush(responsePacket);
+        ListMembersResponsePacket listMembersResponsePacket = new ListMembersResponsePacket(packet.getId(), packet.getType(), userList);
+        channel.writeAndFlush(listMembersResponsePacket);
     }
 
     private void chatMessage(Channel channel, ChatMessageRequestPacket packet) {

@@ -3,6 +3,8 @@ package com.chanshiyu.chat.protocol.response;
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
 import com.chanshiyu.chat.session.Session;
+import com.chanshiyu.mbg.model.vo.User;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,15 +17,18 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ListGroupMembersResponsePacket extends Packet {
+@AllArgsConstructor
+public class ListMembersResponsePacket extends Packet {
 
-    private int groupId;
+    private int id;
 
-    private List<Session> sessionList;
+    private byte type;
+
+    private List<User> userList;
 
     @Override
     public Byte getCommand() {
-        return Command.LIST_GROUP_MEMBERS_RESPONSE;
+        return Command.LIST_MEMBERS_RESPONSE;
     }
 
 }

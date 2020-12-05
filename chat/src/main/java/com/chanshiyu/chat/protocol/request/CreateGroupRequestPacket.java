@@ -16,7 +16,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class CreateGroupRequestPacket extends Packet {
 
-    private List<Integer> userIdList;
+    private String name;
 
     @Override
     public Byte getCommand() {

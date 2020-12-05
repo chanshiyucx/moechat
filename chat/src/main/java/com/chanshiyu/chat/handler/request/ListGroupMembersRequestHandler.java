@@ -1,7 +1,7 @@
 package com.chanshiyu.chat.handler.request;
 
 import com.chanshiyu.chat.handler.DisruptorRequestHandler;
-import com.chanshiyu.chat.protocol.request.ListGroupMembersRequestPacket;
+import com.chanshiyu.chat.protocol.request.ListMembersRequestPacket;
 import io.netty.channel.ChannelHandler;
 
 /**
@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandler;
  * @since 2020/11/10 17:57
  */
 @ChannelHandler.Sharable
-public class ListGroupMembersRequestHandler extends DisruptorRequestHandler<ListGroupMembersRequestPacket> {
+public class ListGroupMembersRequestHandler extends DisruptorRequestHandler<ListMembersRequestPacket> {
 
     public static final ListGroupMembersRequestHandler INSTANCE = new ListGroupMembersRequestHandler();
 

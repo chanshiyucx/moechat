@@ -61,10 +61,10 @@ public interface Command {
     byte QUIT_GROUP_RESPONSE = 18;
 
     /**
-     * 群成员
+     * 频道和群组成员
      */
-    byte LIST_GROUP_MEMBERS_REQUEST = 19;
-    byte LIST_GROUP_MEMBERS_RESPONSE = 20;
+    byte LIST_MEMBERS_REQUEST = 19;
+    byte LIST_MEMBERS_RESPONSE = 20;
 
     /**
      * 聊天记录

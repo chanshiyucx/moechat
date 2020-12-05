@@ -3,7 +3,6 @@ package com.chanshiyu.chat.protocol.response;
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,6 +23,8 @@ public class MessageResponsePacket extends Packet {
     private int to;
 
     private byte type;
+
+    private String nickname;
 
     private String avatar;
 

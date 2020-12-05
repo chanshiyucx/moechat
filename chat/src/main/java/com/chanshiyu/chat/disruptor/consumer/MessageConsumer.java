@@ -230,7 +230,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             default:
                 break;
         }
-        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getTo(), packet.getType(), session.getAvatar(), packet.getMessage(), now);
+        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getTo(), packet.getType(), session.getNickname(), session.getAvatar(), packet.getMessage(), now);
         channelGroup.writeAndFlush(messageResponsePacket);
 
         // 保存消息
@@ -238,6 +238,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 .fromId(session.getUserId())
                 .toId(packet.getTo())
                 .toType((int) packet.getType())
+                .message(packet.getMessage())
                 .createTime(now)
                 .build();
         messageService.save(message);

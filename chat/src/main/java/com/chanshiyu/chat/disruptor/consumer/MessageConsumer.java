@@ -17,6 +17,7 @@ import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.entity.Message;
 import com.chanshiyu.mbg.model.vo.Chat;
+import com.chanshiyu.mbg.model.vo.MessageVO;
 import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
@@ -335,9 +336,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 频道和群组成员列表（只显示在线成员）
      */
     private void listMembers(Channel channel, ListMembersRequestPacket packet) {
-
-        log.info("channel session: {}, count: {}", SessionUtil.getSession(channel), SessionUtil.getAllChannels().size());
-
         List<User> userList;
         if (packet.getType() == ChatTypeAttributes.CHANNEL) {
             // 频道
@@ -354,15 +352,30 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     })
                     .collect(Collectors.toList());
         } else {
-            // 群组
+            // TODO: 群组
             userList = new ArrayList<>();
         }
         ListMembersResponsePacket listMembersResponsePacket = new ListMembersResponsePacket(packet.getId(), packet.getType(), userList);
         channel.writeAndFlush(listMembersResponsePacket);
     }
 
+    /**
+     * 历史消息
+     */
     private void chatMessage(Channel channel, ChatMessageRequestPacket packet) {
-        log.info("historyMessage: {}", packet);
+        IMessageService messageService = SpringUtil.getBean(IMessageService.class);
+        List<Message> messageList = messageService.getMessageList(packet.getId(), packet.getType(), packet.getIndex());
+        List<MessageVO> messageVOList = messageList.stream()
+                .map(message -> {
+                    MessageVO messageVO = new MessageVO();
+                    BeanUtils.copyProperties(message, messageVO);
+                    messageVO.setFromNickname(ChatUtil.getNickname(message.getFromId(), ChatTypeAttributes.USER));
+                    messageVO.setFromAvatar(ChatUtil.getAvatar(message.getFromId(), ChatTypeAttributes.USER));
+                    return messageVO;
+                }).collect(Collectors.toList());
+        log.info("messageVOList: {}", messageVOList);
+        ChatMessageResponsePacket chatMessageResponsePacket = new ChatMessageResponsePacket(packet.getId(), packet.getType(), messageVOList);
+        channel.writeAndFlush(chatMessageResponsePacket);
     }
 
     /**

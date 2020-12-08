@@ -7,6 +7,7 @@ import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.serialize.Serializer;
 import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import com.chanshiyu.common.util.CryptoAesUtil;
+import com.chanshiyu.common.util.SpringUtil;
 import io.netty.buffer.ByteBuf;
 
 import java.util.HashMap;
@@ -26,6 +27,8 @@ public class PacketCodec {
     private static final Map<Byte, Class<? extends Packet>> packetTypeMap;
 
     private static final Map<Byte, Serializer> serializerMap;
+
+    private static final Serializer serializer = SpringUtil.getBean(Serializer.class);
 
     static {
         packetTypeMap = new HashMap<>();
@@ -71,19 +74,18 @@ public class PacketCodec {
         packetTypeMap.put(Command.ERROR_OPERATION_RESPONSE, ErrorOperationResponsePacket.class);
 
         serializerMap = new HashMap<>();
-        Serializer serializer = new JSONSerializer();
         serializerMap.put(serializer.getSerializerAlgorithm(), serializer);
     }
 
     public void encode(ByteBuf byteBuf, Packet packet) throws Exception {
         // 1. 序列化 java 对象
-        byte[] bytes = Serializer.DEFAULT.serialize(packet);
+        byte[] bytes = serializer.serialize(packet);
         // 2. 数据包加密
         bytes = CryptoAesUtil.encrypt(bytes, CryptoAttributes.DEFAULT_KEY, CryptoAttributes.DEFAULT_IV);
         // 3. 实际编码过程
         byteBuf.writeInt(MAGIC_NUMBER)
                 .writeByte(packet.getVersion())
-                .writeByte(Serializer.DEFAULT.getSerializerAlgorithm())
+                .writeByte(serializer.getSerializerAlgorithm())
                 .writeByte(packet.getCommand())
                 .writeInt(bytes.length)
                 .writeBytes(bytes);

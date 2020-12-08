@@ -1,6 +1,7 @@
 package com.chanshiyu.chat.protocol;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -10,13 +11,14 @@ import lombok.Data;
  */
 @Data
 public abstract class Packet {
-    /**
-     * 协议版本，通过注解使它不被序列化，避免冗余
-     */
-    @JSONField(deserialize = false, serialize = false)
+
+    @JsonIgnore()
     private byte version = 1;
 
-    @JSONField(serialize = false)
+    /**
+     * 仅做反序列化操作
+     */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public abstract Byte getCommand();
 
 }

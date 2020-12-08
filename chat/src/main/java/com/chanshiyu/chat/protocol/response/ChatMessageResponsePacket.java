@@ -2,7 +2,8 @@ package com.chanshiyu.chat.protocol.response;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
-import com.chanshiyu.mbg.entity.Message;
+import com.chanshiyu.mbg.model.vo.MessageVO;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,9 +16,14 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class ChatMessageResponsePacket extends Packet {
 
-    List<Message> messageList;
+    private int id;
+
+    private byte type;
+
+    List<MessageVO> messageList;
 
     @Override
     public Byte getCommand() {

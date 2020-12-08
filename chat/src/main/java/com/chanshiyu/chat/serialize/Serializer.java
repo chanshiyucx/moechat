@@ -1,7 +1,8 @@
 package com.chanshiyu.chat.serialize;
 
-import com.chanshiyu.chat.serialize.impl.JSONSerializer;
-import lombok.Data;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.io.IOException;
 
 /**
  * @author SHIYU
@@ -9,8 +10,6 @@ import lombok.Data;
  * @since 2020/11/9 10:38
  */
 public interface Serializer {
-
-    Serializer DEFAULT = new JSONSerializer();
 
     /**
      * 序列化算法
@@ -20,11 +19,11 @@ public interface Serializer {
     /**
      * java 对象转换成二进制
      */
-    byte[] serialize(Object object);
+    byte[] serialize(Object object) throws JsonProcessingException;
 
     /**
      * 二进制转换成 java 对象
      */
-    <T> T deserialize(Class<T> clazz, byte[] bytes);
+    <T> T deserialize(Class<T> clazz, byte[] bytes) throws IOException;
 
 }

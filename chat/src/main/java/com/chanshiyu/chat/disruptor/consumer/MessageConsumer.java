@@ -205,7 +205,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 转发消息
         ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());
-        switch (packet.getType()) {
+        switch (packet.getToType()) {
             case ChatTypeAttributes.CHANNEL:
                 SessionUtil.getAllChannels().forEach(ch -> {
                     if (ch != channel) {
@@ -218,13 +218,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 break;
             case ChatTypeAttributes.USER:
                 // 判断是否存在用户
-                Account account = accountService.getById(packet.getTo());
+                Account account = accountService.getById(packet.getToId());
                 if (account == null) {
                     ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
                     return;
                 }
                 // TODO：是否为好友
-                Channel ch = SessionUtil.getChannel(packet.getTo());
+                Channel ch = SessionUtil.getChannel(packet.getToId());
                 if (ch != null) {
                     channelGroup.add(ch);
                 }
@@ -232,15 +232,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             default:
                 break;
         }
-        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getTo(), packet.getType(), session.getNickname(), session.getAvatar(), packet.getMessage(), now);
+        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getToId(), packet.getToType(), session.getNickname(), session.getAvatar(), packet.getMessage(), now);
         channelGroup.writeAndFlush(messageResponsePacket);
 
         // 保存消息
         Message message = Message.builder()
                 .fromId(session.getUserId())
                 .fromUsername(session.getUsername())
-                .toId(packet.getTo())
-                .toType((int) packet.getType())
+                .toId(packet.getToId())
+                .toType((int) packet.getToType())
                 .message(packet.getMessage())
                 .createTime(now)
                 .build();

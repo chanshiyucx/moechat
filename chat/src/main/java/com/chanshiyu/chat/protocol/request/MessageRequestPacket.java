@@ -16,11 +16,11 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor
 public class MessageRequestPacket extends Packet {
 
-    private int from;
+    private int fromId;
 
-    private int to;
+    private int toId;
 
-    private byte type;
+    private byte toType;
 
     private int index;
 

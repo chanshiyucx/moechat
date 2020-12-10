@@ -62,9 +62,12 @@ public class PacketCodec {
         // 群聊成员
         packetTypeMap.put(Command.LIST_MEMBERS_REQUEST, ListMembersRequestPacket.class);
         packetTypeMap.put(Command.LIST_MEMBERS_RESPONSE, ListMembersResponsePacket.class);
-        // 聊天记录
+        // 聊天列表
         packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
         packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);
+        // 最近聊天消息
+        packetTypeMap.put(Command.CHAT_RECENT_REQUEST, ChatRecentRequestPacket.class);
+        packetTypeMap.put(Command.CHAT_RECENT_RESPONSE, ChatRecentResponsePacket.class);
         // 历史消息
         packetTypeMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestPacket.class);
         packetTypeMap.put(Command.CHAT_MESSAGE_RESPONSE, ChatMessageResponsePacket.class);

@@ -22,13 +22,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private final MessageMapper messageMapper;
 
     @Override
-    public List<Message> getMessageList(int toId, byte toType, int index) {
+    public List<Message> getMessageList(int toId, byte toType, int index, int size) {
         LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Message::getToId, toId)
                 .eq(Message::getToType, toType)
                 .lt(index > 0, Message::getId, index)
                 .orderByDesc(Message::getId)
-                .last("limit 3");
+                .last("limit " + size);
         return messageMapper.selectList(queryWrapper);
     }
 

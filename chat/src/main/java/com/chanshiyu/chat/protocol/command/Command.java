@@ -67,16 +67,22 @@ public interface Command {
     byte LIST_MEMBERS_RESPONSE = 20;
 
     /**
-     * 聊天记录
+     * 聊天列表
      */
     byte CHAT_HISTORY_REQUEST = 21;
     byte CHAT_HISTORY_RESPONSE = 22;
 
     /**
+     * 最近聊天消息
+     */
+    byte CHAT_RECENT_REQUEST = 23;
+    byte CHAT_RECENT_RESPONSE = 24;
+
+    /**
      * 历史消息
      */
-    byte CHAT_MESSAGE_REQUEST = 23;
-    byte CHAT_MESSAGE_RESPONSE = 24;
+    byte CHAT_MESSAGE_REQUEST = 25;
+    byte CHAT_MESSAGE_RESPONSE = 26;
 
     /**
      * 消息发送成功

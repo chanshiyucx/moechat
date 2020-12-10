@@ -18,6 +18,7 @@ import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.entity.Message;
 import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.mbg.model.vo.MessageVO;
+import com.chanshiyu.mbg.model.vo.RecentMessage;
 import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
@@ -237,6 +238,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         // 保存消息
         Message message = Message.builder()
                 .fromId(session.getUserId())
+                .fromUsername(session.getUsername())
                 .toId(packet.getTo())
                 .toType((int) packet.getType())
                 .message(packet.getMessage())
@@ -363,18 +365,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 历史消息
      */
     private void chatMessage(Channel channel, ChatMessageRequestPacket packet) {
-        IMessageService messageService = SpringUtil.getBean(IMessageService.class);
-        List<Message> messageList = messageService.getMessageList(packet.getId(), packet.getType(), packet.getIndex());
-        List<MessageVO> messageVOList = messageList.stream()
-                .map(message -> {
-                    MessageVO messageVO = new MessageVO();
-                    BeanUtils.copyProperties(message, messageVO);
-                    messageVO.setFromNickname(ChatUtil.getNickname(message.getFromId(), ChatTypeAttributes.USER));
-                    messageVO.setFromAvatar(ChatUtil.getAvatar(message.getFromId(), ChatTypeAttributes.USER));
-                    return messageVO;
-                }).collect(Collectors.toList());
-        log.info("messageVOList: {}", messageVOList);
-        ChatMessageResponsePacket chatMessageResponsePacket = new ChatMessageResponsePacket(packet.getId(), packet.getType(), messageVOList);
+        List<MessageVO> messageList = getMessageList(packet.getId(), packet.getType(), packet.getIndex(), 20);
+        ChatMessageResponsePacket chatMessageResponsePacket = new ChatMessageResponsePacket(packet.getId(), packet.getType(), messageList);
         channel.writeAndFlush(chatMessageResponsePacket);
     }
 
@@ -395,6 +387,32 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         list.addAll(chatList);
         ChatHistoryResponsePacket chatHistoryResponsePacket = new ChatHistoryResponsePacket(list);
         channel.writeAndFlush(chatHistoryResponsePacket);
+
+        // 推送最近消息
+        List<RecentMessage> recentMessageList = list.stream()
+                .map(chat -> {
+                    List<MessageVO> messageList = getMessageList(chat.getId(), chat.getType(), 0, 10);
+                    return new RecentMessage(chat.getId(), chat.getType(), messageList);
+                })
+                .collect(Collectors.toList());
+        ChatRecentResponsePacket chatRecentResponsePacket = new ChatRecentResponsePacket(recentMessageList);
+        channel.writeAndFlush(chatRecentResponsePacket);
+    }
+
+    /**
+     * 查询消息列表
+     */
+    private List<MessageVO> getMessageList(int toId, byte toType, int index, int size) {
+        IMessageService messageService = SpringUtil.getBean(IMessageService.class);
+        List<Message> messageList = messageService.getMessageList(toId, toType, index, size);
+        return messageList.stream()
+                .map(message -> {
+                    MessageVO messageVO = new MessageVO();
+                    BeanUtils.copyProperties(message, messageVO);
+                    messageVO.setFromNickname(ChatUtil.getNickname(message.getFromId(), ChatTypeAttributes.USER));
+                    messageVO.setFromAvatar(ChatUtil.getAvatar(message.getFromId(), ChatTypeAttributes.USER));
+                    return messageVO;
+                }).collect(Collectors.toList());
     }
 
 }

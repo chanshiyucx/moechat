@@ -13,8 +13,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 public class MessageVO extends Message {
 
-    private String fromNickname;
+    private String nickname;
 
-    private String fromAvatar;
+    private String avatar;
 
 }

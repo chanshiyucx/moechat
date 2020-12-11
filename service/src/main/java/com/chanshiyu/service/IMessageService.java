@@ -14,6 +14,6 @@ public interface IMessageService extends IService<Message> {
     /**
      * 获取消息列表
      */
-    List<Message> getMessageList(int toId, byte toType, int index, int size);
+    List<Message> getMessageList(int receiver, byte type, int index, int size);
 
 }

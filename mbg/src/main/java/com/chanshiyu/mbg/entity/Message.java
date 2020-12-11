@@ -32,16 +32,16 @@ public class Message implements Serializable {
     private Integer id;
 
     @ApiModelProperty(value = "发送者ID")
-    private Integer fromId;
+    private Integer sender;
 
     @ApiModelProperty(value = "发生者用户名")
-    private String fromUsername;
+    private String username;
 
     @ApiModelProperty(value = "接收者")
-    private Integer toId;
+    private Integer receiver;
 
     @ApiModelProperty(value = "接收类型<1 频道，2 群组，3 用户>")
-    private Integer toType;
+    private Integer type;
 
     @ApiModelProperty(value = "消息内容")
     private String message;

@@ -205,7 +205,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 转发消息
         ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());
-        switch (packet.getToType()) {
+        switch (packet.getType()) {
             case ChatTypeAttributes.CHANNEL:
                 SessionUtil.getAllChannels().forEach(ch -> {
                     if (ch != channel) {
@@ -218,13 +218,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 break;
             case ChatTypeAttributes.USER:
                 // 判断是否存在用户
-                Account account = accountService.getById(packet.getToId());
+                Account account = accountService.getById(packet.getReceiver());
                 if (account == null) {
                     ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
                     return;
                 }
                 // TODO：是否为好友
-                Channel ch = SessionUtil.getChannel(packet.getToId());
+                Channel ch = SessionUtil.getChannel(packet.getReceiver());
                 if (ch != null) {
                     channelGroup.add(ch);
                 }
@@ -232,15 +232,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             default:
                 break;
         }
-        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getToId(), packet.getToType(), session.getNickname(), session.getAvatar(), packet.getMessage(), now);
+        MessageResponsePacket messageResponsePacket = new MessageResponsePacket(session.getUserId(), packet.getReceiver(), packet.getType(), session.getNickname(), session.getAvatar(), packet.getMessage(), now);
         channelGroup.writeAndFlush(messageResponsePacket);
 
         // 保存消息
         Message message = Message.builder()
-                .fromId(session.getUserId())
-                .fromUsername(session.getUsername())
-                .toId(packet.getToId())
-                .toType((int) packet.getToType())
+                .sender(session.getUserId())
+                .username(session.getUsername())
+                .receiver(packet.getReceiver())
+                .type((int) packet.getType())
                 .message(packet.getMessage())
                 .createTime(now)
                 .build();
@@ -402,15 +402,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     /**
      * 查询消息列表
      */
-    private List<MessageVO> getMessageList(int toId, byte toType, int index, int size) {
+    private List<MessageVO> getMessageList(int receiver, byte type, int index, int size) {
         IMessageService messageService = SpringUtil.getBean(IMessageService.class);
-        List<Message> messageList = messageService.getMessageList(toId, toType, index, size);
+        List<Message> messageList = messageService.getMessageList(receiver, type, index, size);
         return messageList.stream()
                 .map(message -> {
                     MessageVO messageVO = new MessageVO();
                     BeanUtils.copyProperties(message, messageVO);
-                    messageVO.setFromNickname(ChatUtil.getNickname(message.getFromId(), ChatTypeAttributes.USER));
-                    messageVO.setFromAvatar(ChatUtil.getAvatar(message.getFromId(), ChatTypeAttributes.USER));
+                    messageVO.setNickname(ChatUtil.getNickname(message.getSender(), ChatTypeAttributes.USER));
+                    messageVO.setAvatar(ChatUtil.getAvatar(message.getSender(), ChatTypeAttributes.USER));
                     return messageVO;
                 }).collect(Collectors.toList());
     }

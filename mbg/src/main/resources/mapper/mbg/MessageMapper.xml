@@ -5,10 +5,10 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.chanshiyu.mbg.entity.Message">
         <id column="id" property="id" />
-        <result column="from_id" property="fromId" />
-        <result column="from_username" property="fromUsername" />
-        <result column="to_id" property="toId" />
-        <result column="to_type" property="toType" />
+        <result column="sender" property="sender" />
+        <result column="username" property="username" />
+        <result column="receiver" property="receiver" />
+        <result column="type" property="type" />
         <result column="message" property="message" />
         <result column="create_time" property="createTime" />
     </resultMap>

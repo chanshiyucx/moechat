@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MessageResponsePacket extends Packet {
 
-    private int from;
+    private int sender;
 
-    private int to;
+    private int receiver;
 
     private byte type;
 

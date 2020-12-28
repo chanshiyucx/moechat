@@ -85,6 +85,12 @@ public interface Command {
     byte CHAT_MESSAGE_RESPONSE = 26;
 
     /**
+     * 更新用户信息
+     */
+    byte UPDATE_USERINFO_REQUEST = 27;
+    byte UPDATE_USERINFO_RESPONSE = 28;
+
+    /**
      * 消息发送成功
      */
     byte MESSAGE_SUCCESS_RESPONSE = 101;

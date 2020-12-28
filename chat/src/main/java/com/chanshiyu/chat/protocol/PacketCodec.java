@@ -5,7 +5,6 @@ import com.chanshiyu.chat.protocol.command.Command;
 import com.chanshiyu.chat.protocol.request.*;
 import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.serialize.Serializer;
-import com.chanshiyu.chat.serialize.impl.JSONSerializer;
 import com.chanshiyu.common.util.CryptoAesUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import io.netty.buffer.ByteBuf;
@@ -71,6 +70,9 @@ public class PacketCodec {
         // 历史消息
         packetTypeMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestPacket.class);
         packetTypeMap.put(Command.CHAT_MESSAGE_RESPONSE, ChatMessageResponsePacket.class);
+        // 更新用户信息
+        packetTypeMap.put(Command.UPDATE_USERINFO_REQUEST, UpdateUserInfoRequestPacket.class);
+        packetTypeMap.put(Command.UPDATE_USERINFO_RESPONSE, UpdateUserInfoResponsePacket.class);
         // 消息发送成功
         packetTypeMap.put(Command.MESSAGE_SUCCESS_RESPONSE, MessageSuccessPacket.class);
         // 错误响应消息

@@ -1,5 +1,6 @@
 package com.chanshiyu.mbg.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.chanshiyu.mbg.entity.Account;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 

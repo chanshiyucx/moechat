@@ -19,4 +19,19 @@ public interface IAccountService extends IService<Account> {
      */
     Account registerOrLogin(String username, String password);
 
+    /**
+     * 更新头像
+     */
+    void updateAvatar(int id, String avatar);
+
+    /**
+     * 更新昵称
+     */
+    void updateNickname(int id, String nickname);
+
+    /**
+     * 更新密码
+     */
+    void updatePassword(int id, String oldPassword, String newPassword);
+
 }

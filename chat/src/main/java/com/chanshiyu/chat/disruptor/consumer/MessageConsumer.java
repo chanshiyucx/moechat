@@ -85,6 +85,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.CHAT_MESSAGE_REQUEST:
                 chatMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
+            case Command.UPDATE_USERINFO_REQUEST:
+                updateUserInfo(channel, (UpdateUserInfoRequestPacket) packet);
+                break;
             default:
                 log.error("command -> {} , 该消息未被处理", command);
                 break;
@@ -413,6 +416,50 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     messageVO.setAvatar(ChatUtil.getAvatar(message.getSender(), ChatTypeAttributes.USER));
                     return messageVO;
                 }).collect(Collectors.toList());
+    }
+
+    /**
+     * 更新用户信息
+     */
+    private void updateUserInfo(Channel channel, UpdateUserInfoRequestPacket packet) {
+        log.info("UpdateUserInfoRequestPacket: {}", packet);
+        Session session = SessionUtil.getSession(channel);
+        if (session.isTourist()) {
+            UpdateUserInfoResponsePacket updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, "游客无法更新个人信息！", null, null);
+            channel.writeAndFlush(updateUserInfoResponsePacket);
+            return;
+        }
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+        int userId = session.getUserId();
+        String avatar = packet.getAvatar();
+        String nickname = packet.getNickname();
+        String oldPassword = packet.getOldPassword();
+        String newPassword = packet.getNewPassword();
+        UpdateUserInfoResponsePacket updateUserInfoResponsePacket;
+        try {
+            if (StringUtils.isNotBlank(avatar)) {
+                // 修改头像
+                accountService.updateAvatar(userId, avatar);
+                ChatUtil.setAvatar(userId, ChatTypeAttributes.USER, avatar);
+                session.setAvatar(avatar);
+            } else if (StringUtils.isNotBlank(nickname)) {
+                // 修改昵称
+                accountService.updateNickname(userId, nickname);
+                ChatUtil.setNickname(userId, ChatTypeAttributes.USER, nickname);
+                session.setNickname(nickname);
+            } else if (StringUtils.isNotBlank(oldPassword) && StringUtils.isNotBlank(newPassword)) {
+                // 修改密码
+                accountService.updatePassword(userId, oldPassword, newPassword);
+            }
+            updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(true, "更新成功！", session.getAvatar(), session.getNickname());
+        } catch (Exception e) {
+            String errorMsg = e.getMessage();
+            if (StringUtils.isBlank(errorMsg)) {
+                errorMsg = "更新失败！";
+            }
+            updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, errorMsg, null, null);
+        }
+        channel.writeAndFlush(updateUserInfoResponsePacket);
     }
 
 }

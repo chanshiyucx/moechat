@@ -58,4 +58,28 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         return account;
     }
 
+    @Override
+    public void updateAvatar(int id, String avatar) {
+        Account account = accountMapper.selectById(id);
+        account.setAvatar(avatar);
+        accountMapper.updateById(account);
+    }
+
+    @Override
+    public void updateNickname(int id, String nickname) {
+        Account account = accountMapper.selectById(id);
+        account.setNickname(nickname);
+        accountMapper.updateById(account);
+    }
+
+    @Override
+    public void updatePassword(int id, String oldPassword, String newPassword) {
+        Account account = accountMapper.selectById(id);
+        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
+            throw new BadCredentialsException("密码不正确");
+        }
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountMapper.updateById(account);
+    }
+
 }

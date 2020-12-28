@@ -33,6 +33,7 @@ public class IMHandler extends SimpleChannelInboundHandler<Packet> {
         handlerMap.put(Command.QUIT_GROUP_REQUEST, QuitGroupRequestHandler.INSTANCE);
         handlerMap.put(Command.LIST_MEMBERS_REQUEST, ListGroupMembersRequestHandler.INSTANCE);
         handlerMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestHandler.INSTANCE);
+        handlerMap.put(Command.UPDATE_USERINFO_REQUEST, UpdateUserInfoRequestHandler.INSTANCE);
     }
 
     @Override

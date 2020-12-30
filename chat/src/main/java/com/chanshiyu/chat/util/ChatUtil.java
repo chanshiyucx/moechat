@@ -95,6 +95,14 @@ public class ChatUtil {
     }
 
     /**
+     * 移除聊天成员
+     */
+    public static void removeChatHistory(int userId, String chat) {
+        RedisService redis = getRedis();
+        redis.zRemove(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat);
+    }
+
+    /**
      * 获取用户聊天列表
      */
     public static List<Chat> getChatHistory(int userId) {
@@ -115,14 +123,6 @@ public class ChatUtil {
                     return new Chat(id, type, nickname, avatar, time);
                 })
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * 移除聊天成员
-     */
-    public static boolean removeChatHistory(int userId, String chat) {
-        RedisService redis = getRedis();
-        return redis.zRemove(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) > 0;
     }
 
     /**

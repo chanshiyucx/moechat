@@ -314,6 +314,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChatUtil.removeChatHistory(session.getUserId(), chat);
         RemoveFriendResponsePacket removeFriendResponsePacket = new RemoveFriendResponsePacket(true, "移除成功！");
         channel.writeAndFlush(removeFriendResponsePacket);
+        // 刷新聊天列表
+        refreshChatList(channel);
     }
 
     private void createGroup(Channel channel, CreateGroupRequestPacket packet) {

@@ -59,7 +59,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 login(channel, (LoginRequestPacket) packet);
                 break;
             case Command.LOGOUT_REQUEST:
-                logout(channel, (LogoutRequestPacket) packet);
+                logout(channel);
                 break;
             case Command.MESSAGE_REQUEST:
                 message(ctx, (MessageRequestPacket) packet);
@@ -135,7 +135,13 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     ChatUtil.sendErrorMessage(channel, false, "用户名和密码必须为3-12位数字字母下划线组合！");
                     return;
                 }
-                account = accountService.registerOrLogin(username, password);
+                account = accountService.getAccountByUsername(username);
+                if (account == null) {
+                    account = accountService.register(username, password);
+                    ChatUtil.setNickname(account.getId(), ChatTypeAttributes.USER, username);
+                } else {
+                    account = accountService.login(username, password);
+                }
             } else if (StringUtils.isNotBlank(token)) {
                 // token 登录，这里不需要验证过期时间
                 Claims claims = jwtUtil.getClaimsFromToken(token);
@@ -172,7 +178,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         }
 
         // 绑定新会话
-        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), account.getAvatar(), ip, device, ChatUtil.isTourist(account.getId()), new Date());
+        String nickname = ChatUtil.getNickname(account.getId(), ChatTypeAttributes.USER);
+        String avatar = ChatUtil.getAvatar(account.getId(), ChatTypeAttributes.USER);
+        Session session = new Session(account.getId(), account.getUsername(), nickname, avatar, ip, device, ChatUtil.isTourist(account.getId()), new Date());
         SessionUtil.bindSession(session, channel);
 
         // 登录成功响应
@@ -190,7 +198,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     /**
      * 登出
      */
-    private void logout(Channel channel, LogoutRequestPacket packet) {
+    private void logout(Channel channel) {
         LogoutResponsePacket logoutResponsePacket = new LogoutResponsePacket();
         logoutResponsePacket.setSuccess(true);
         channel.writeAndFlush(logoutResponsePacket);
@@ -433,7 +441,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             channel.writeAndFlush(updateUserInfoResponsePacket);
             return;
         }
-        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
         int userId = session.getUserId();
         String avatar = packet.getAvatar();
         String nickname = packet.getNickname();
@@ -443,16 +450,15 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         try {
             if (StringUtils.isNotBlank(avatar)) {
                 // 修改头像
-                accountService.updateAvatar(userId, avatar);
                 ChatUtil.setAvatar(userId, ChatTypeAttributes.USER, avatar);
                 session.setAvatar(avatar);
             } else if (StringUtils.isNotBlank(nickname)) {
                 // 修改昵称
-                accountService.updateNickname(userId, nickname);
                 ChatUtil.setNickname(userId, ChatTypeAttributes.USER, nickname);
                 session.setNickname(nickname);
             } else if (StringUtils.isNotBlank(oldPassword) && StringUtils.isNotBlank(newPassword)) {
                 // 修改密码
+                IAccountService accountService = SpringUtil.getBean(IAccountService.class);
                 accountService.updatePassword(userId, oldPassword, newPassword);
             }
             updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(true, "更新成功！", session.getAvatar(), session.getNickname());

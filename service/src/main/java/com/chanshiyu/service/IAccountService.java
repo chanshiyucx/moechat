@@ -15,19 +15,14 @@ public interface IAccountService extends IService<Account> {
     Account getAccountByUsername(String username);
 
     /**
-     * 注册或登录
+     * 注册
      */
-    Account registerOrLogin(String username, String password);
+    Account register(String username, String password);
 
     /**
-     * 更新头像
+     * 登录
      */
-    void updateAvatar(int id, String avatar);
-
-    /**
-     * 更新昵称
-     */
-    void updateNickname(int id, String nickname);
+    Account login(String username, String password);
 
     /**
      * 更新密码

@@ -37,12 +37,6 @@ public class Account implements Serializable {
     @ApiModelProperty(value = "密码")
     private String password;
 
-    @ApiModelProperty(value = "昵称")
-    private String nickname;
-
-    @ApiModelProperty(value = "头像")
-    private String avatar;
-
     @ApiModelProperty(value = "启用状态<0:禁用,1:启用>")
     private Integer status;
 

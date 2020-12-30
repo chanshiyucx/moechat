@@ -44,8 +44,6 @@ public class ChatUtil {
         return Account.builder()
                 .id(userId)
                 .username(username)
-                .nickname(username)
-                .avatar(null)
                 .build();
     }
 

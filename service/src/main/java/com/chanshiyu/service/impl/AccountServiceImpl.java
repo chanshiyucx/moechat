@@ -35,41 +35,27 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     @Override
-    public Account registerOrLogin(String username, String password) {
-        Account account = getAccountByUsername(username);
-        if (account == null) {
-            account = Account.builder()
-                    .username(username)
-                    .nickname(username)
-                    .password(passwordEncoder.encode(password))
-                    .avatar(null)
-                    .status(AccountAttributes.ACTIVE)
-                    .createTime(LocalDateTime.now())
-                    .build();
-            accountMapper.insert(account);
-        } else {
-            if (!passwordEncoder.matches(password, account.getPassword())) {
-                throw new BadCredentialsException("密码不正确");
-            }
-            if (account.getStatus() == AccountAttributes.INACTIVE) {
-                throw new AuthenticationException("该账户已被封禁");
-            }
-        }
+    public Account register(String username, String password) {
+        Account account = Account.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .status(AccountAttributes.ACTIVE)
+                .createTime(LocalDateTime.now())
+                .build();
+        accountMapper.insert(account);
         return account;
     }
 
     @Override
-    public void updateAvatar(int id, String avatar) {
-        Account account = accountMapper.selectById(id);
-        account.setAvatar(avatar);
-        accountMapper.updateById(account);
-    }
-
-    @Override
-    public void updateNickname(int id, String nickname) {
-        Account account = accountMapper.selectById(id);
-        account.setNickname(nickname);
-        accountMapper.updateById(account);
+    public Account login(String username, String password) {
+        Account account = getAccountByUsername(username);
+        if (!passwordEncoder.matches(password, account.getPassword())) {
+            throw new BadCredentialsException("密码不正确");
+        }
+        if (account.getStatus() == AccountAttributes.INACTIVE) {
+            throw new AuthenticationException("该账户已被封禁");
+        }
+        return account;
     }
 
     @Override

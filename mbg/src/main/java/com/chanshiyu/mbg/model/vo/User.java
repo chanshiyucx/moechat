@@ -20,6 +20,8 @@ public class User {
 
     private String avatar;
 
+    private String device;
+
     private boolean tourist;
 
 }

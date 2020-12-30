@@ -76,7 +76,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public void updatePassword(int id, String oldPassword, String newPassword) {
         Account account = accountMapper.selectById(id);
         if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
-            throw new BadCredentialsException("密码不正确");
+            throw new BadCredentialsException("旧密码不正确");
         }
         account.setPassword(passwordEncoder.encode(newPassword));
         accountMapper.updateById(account);

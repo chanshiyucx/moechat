@@ -24,6 +24,8 @@ public class LoginRequestPacket extends Packet {
 
     private String token;
 
+    private String device;
+
     @Override
     public Byte getCommand() {
         return Command.LOGIN_REQUEST;

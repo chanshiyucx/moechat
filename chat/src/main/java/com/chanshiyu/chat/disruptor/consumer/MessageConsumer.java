@@ -123,6 +123,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         String username = packet.getUsername();
         String password = packet.getPassword();
         String token = packet.getToken();
+        String device = packet.getDevice();
         Account account = null;
         String errorMsg = null;
         try {
@@ -171,7 +172,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         }
 
         // 绑定新会话
-        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), account.getAvatar(), ip, ChatUtil.isTourist(account.getId()), new Date());
+        Session session = new Session(account.getId(), account.getUsername(), account.getNickname(), account.getAvatar(), ip, device, ChatUtil.isTourist(account.getId()), new Date());
         SessionUtil.bindSession(session, channel);
 
         // 登录成功响应
@@ -267,8 +268,14 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             return;
         }
 
-        // 判断是否已经是好友
         Session session = SessionUtil.getSession(channel);
+        // 判断是否为自己
+        if (account.getId() == session.getUserId()) {
+            ChatUtil.sendErrorMessage(channel, false, "不能添加自己为好友！");
+            return;
+        }
+
+        // 判断是否已经是好友
         String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
         boolean isMember = ChatUtil.isChatMember(session.getUserId(), chat);
         if (isMember) {
@@ -279,7 +286,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         // 判断好友数量是否已达到上线
         long size = ChatUtil.getChatHistorySize(session.getUserId());
         if (size >= 100) {
-            ChatUtil.sendErrorMessage(channel, false, "好友和群组数已达上限，无法添加！");
+            ChatUtil.sendErrorMessage(channel, false, "好友和群组数已达上限！");
             return;
         }
 
@@ -346,10 +353,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             // 频道
             userList = SessionUtil.getAllChannels().stream()
                     .map(SessionUtil::getSession)
-                    .filter(session -> {
-                        log.info("session: {}", session);
-                        return !ChatUtil.isTourist(session.getUserId());
-                    })
+                    .filter(session -> !ChatUtil.isTourist(session.getUserId()))
                     .map(session -> {
                         User user = new User();
                         BeanUtils.copyProperties(session, user);

@@ -26,6 +26,8 @@ public class Session {
 
     private String ip;
 
+    private String device;
+
     private boolean tourist;
 
     private Date onlineDate;

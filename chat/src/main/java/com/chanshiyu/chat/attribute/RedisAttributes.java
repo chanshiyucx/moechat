@@ -28,4 +28,16 @@ public interface RedisAttributes {
     // 用户的聊天记录表
     String USER_CHAT_HISTORY = "CHAT_HISTORY_%d";
 
+    // 总注册用户
+    String TOTAL_REGISTER_USER = "TOTAL_REGISTER_USER";
+
+    // 总发送消息
+    String TOTAL_SEND_MESSAGE = "TOTAL_SEND_MESSAGE";
+
+    // 今日注册用户
+    String TODAY_REGISTER_USER = "TODAY_REGISTER_USER_%s";
+
+    // 今日发送消息
+    String TODAY_SEND_MESSAGE = "TODAY_SEND_MESSAGE_%s";
+
 }

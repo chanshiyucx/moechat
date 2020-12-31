@@ -1,5 +1,6 @@
 package com.chanshiyu.chat.util;
 
+import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
@@ -11,6 +12,7 @@ import io.netty.channel.Channel;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -139,6 +141,60 @@ public class ChatUtil {
     public static boolean isChatMember(int userId, String chat) {
         RedisService redis = getRedis();
         return redis.zScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) != null;
+    }
+
+    /**
+     * 统计注册用户
+     */
+    public static void incrRegisterUser() {
+        RedisService redis = getRedis();
+        redis.incr(String.format(RedisAttributes.TODAY_REGISTER_USER, LocalDate.now().toString()), 1);
+        redis.incr(RedisAttributes.TOTAL_REGISTER_USER, 1);
+    }
+
+    /**
+     * 获取今日用户注册数
+     */
+    public static long getTodayRegisterUser() {
+        RedisService redis = getRedis();
+        Object value = redis.get(String.format(RedisAttributes.TODAY_REGISTER_USER, LocalDate.now().toString()));
+        return Convert.toLong(value, 0L);
+    }
+
+    /**
+     * 获取总用户注册数
+     */
+    public static long getTotalRegisterUser() {
+        RedisService redis = getRedis();
+        Object value = redis.get(RedisAttributes.TOTAL_REGISTER_USER);
+        return Convert.toLong(value, 0L);
+    }
+
+    /**
+     * 统计发送消息
+     */
+    public static void incrSendMessage() {
+        RedisService redis = getRedis();
+        redis.incr(String.format(RedisAttributes.TODAY_SEND_MESSAGE, LocalDate.now().toString()), 1);
+        redis.incr(RedisAttributes.TOTAL_SEND_MESSAGE, 1);
+    }
+
+    /**
+     * 获取今日发送消息
+     */
+    public static long getTodaySendMessage() {
+        RedisService redis = getRedis();
+        Object value = redis.get(String.format(RedisAttributes.TODAY_SEND_MESSAGE, LocalDate.now().toString()));
+        return Convert.toLong(value, 0L);
+    }
+
+    /**
+     * 获取总发送消息
+     */
+    public static long getTotalSendMessage() {
+        RedisService redis = getRedis();
+        Object value = redis.get(RedisAttributes.TOTAL_SEND_MESSAGE);
+        return Convert.toLong(value, 0L);
     }
 
     /**

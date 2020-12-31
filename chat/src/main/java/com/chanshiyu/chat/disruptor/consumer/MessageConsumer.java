@@ -139,6 +139,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 if (account == null) {
                     account = accountService.register(username, password);
                     ChatUtil.setNickname(account.getId(), ChatTypeAttributes.USER, username);
+                    ChatUtil.incrRegisterUser();
                 } else {
                     account = accountService.login(username, password);
                 }
@@ -261,6 +262,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         // 发送成功响应
         MessageSuccessPacket messageSuccessPacket = new MessageSuccessPacket(message.getId(), packet.getIndex(), true, "发送成功");
         channel.writeAndFlush(messageSuccessPacket);
+
+        ChatUtil.incrSendMessage();
     }
 
     /**

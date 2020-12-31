@@ -91,6 +91,12 @@ public interface Command {
     byte UPDATE_USERINFO_RESPONSE = 28;
 
     /**
+     * 统计分析
+     */
+    byte STATISTICS_REQUEST = 29;
+    byte STATISTICS_RESPONSE = 30;
+
+    /**
      * 消息发送成功
      */
     byte MESSAGE_SUCCESS_RESPONSE = 101;

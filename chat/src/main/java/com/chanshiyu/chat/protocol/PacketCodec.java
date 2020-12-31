@@ -73,6 +73,9 @@ public class PacketCodec {
         // 更新用户信息
         packetTypeMap.put(Command.UPDATE_USERINFO_REQUEST, UpdateUserInfoRequestPacket.class);
         packetTypeMap.put(Command.UPDATE_USERINFO_RESPONSE, UpdateUserInfoResponsePacket.class);
+        // 统计分析
+        packetTypeMap.put(Command.STATISTICS_REQUEST, StatisticsRequestPacket.class);
+        packetTypeMap.put(Command.STATISTICS_RESPONSE, StatisticsResponsePacket.class);
         // 消息发送成功
         packetTypeMap.put(Command.MESSAGE_SUCCESS_RESPONSE, MessageSuccessPacket.class);
         // 错误响应消息

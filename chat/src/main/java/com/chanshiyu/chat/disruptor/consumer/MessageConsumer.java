@@ -16,10 +16,7 @@ import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.entity.Message;
-import com.chanshiyu.mbg.model.vo.Chat;
-import com.chanshiyu.mbg.model.vo.MessageVO;
-import com.chanshiyu.mbg.model.vo.RecentMessage;
-import com.chanshiyu.mbg.model.vo.User;
+import com.chanshiyu.mbg.model.vo.*;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
 import com.chanshiyu.service.IChannelService;
@@ -87,6 +84,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 break;
             case Command.UPDATE_USERINFO_REQUEST:
                 updateUserInfo(channel, (UpdateUserInfoRequestPacket) packet);
+                break;
+            case Command.STATISTICS_REQUEST:
+                statistics(channel);
                 break;
             default:
                 log.error("command -> {} , 该消息未被处理", command);
@@ -475,6 +475,19 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, errorMsg, null, null);
         }
         channel.writeAndFlush(updateUserInfoResponsePacket);
+    }
+
+    /**
+     * 统计分析
+     */
+    private void statistics(Channel channel) {
+        final String startDate = "2020-12-01";
+        long totalRegisterUser = ChatUtil.getTotalRegisterUser();
+        long todayRegisterUser = ChatUtil.getTodayRegisterUser();
+        long totalSendMessage = ChatUtil.getTotalSendMessage();
+        long todaySendMessage = ChatUtil.getTodaySendMessage();
+        StatisticsResponsePacket statisticsResponsePacket = new StatisticsResponsePacket(startDate, totalRegisterUser, todayRegisterUser, totalSendMessage, todaySendMessage);
+        channel.writeAndFlush(statisticsResponsePacket);
     }
 
 }

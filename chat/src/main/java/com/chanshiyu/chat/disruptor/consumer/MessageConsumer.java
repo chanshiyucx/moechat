@@ -129,7 +129,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         try {
             if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
                 // 注册或登录流程
-                if (!ValidUtil.validNameOrPW(username) || !ValidUtil.validNameOrPW(password)) {
+                if (ValidUtil.validNameOrPW(username) || ValidUtil.validNameOrPW(password)) {
                     log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
                     ChatUtil.sendErrorMessage(channel, false, "用户名和密码必须为3-12位数字字母下划线组合！");
                     return;
@@ -321,7 +321,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void createGroup(Channel channel, CreateGroupRequestPacket packet) {
         String name = packet.getName();
-        if (!ValidUtil.validContent(name)) {
+        if (ValidUtil.validContent(name)) {
             ChatUtil.sendErrorMessage(channel, false, "群组名称必须为1-12位数字字母下划线中文组合！");
             return;
         }
@@ -465,16 +465,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         String oldPassword = packet.getOldPassword();
         String newPassword = packet.getNewPassword();
 
-        // 验证
-        if (!ValidUtil.validContent(nickname)){
-            ChatUtil.sendErrorMessage(channel, false, "昵称必须为1-12位数字字母下划线中文组合！");
-            return;
-        }
-        if (!ValidUtil.validNameOrPW(newPassword)){
-            ChatUtil.sendErrorMessage(channel, false, "新密码必须为3-12位数字字母下划线组合！");
-            return;
-        }
-
         UpdateUserInfoResponsePacket updateUserInfoResponsePacket;
         try {
             if (StringUtils.isNotBlank(avatar)) {
@@ -483,10 +473,18 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 session.setAvatar(avatar);
             } else if (StringUtils.isNotBlank(nickname)) {
                 // 修改昵称
+                if (ValidUtil.validContent(nickname)){
+                    ChatUtil.sendErrorMessage(channel, false, "昵称必须为1-12位数字字母下划线中文组合！");
+                    return;
+                }
                 ChatUtil.setNickname(userId, ChatTypeAttributes.USER, nickname);
                 session.setNickname(nickname);
             } else if (StringUtils.isNotBlank(oldPassword) && StringUtils.isNotBlank(newPassword)) {
                 // 修改密码
+                if (ValidUtil.validNameOrPW(newPassword)){
+                    ChatUtil.sendErrorMessage(channel, false, "新密码必须为3-12位数字字母下划线组合！");
+                    return;
+                }
                 IAccountService accountService = SpringUtil.getBean(IAccountService.class);
                 accountService.updatePassword(userId, oldPassword, newPassword);
             }

@@ -2,6 +2,7 @@ package com.chanshiyu.chat.protocol.response;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,13 +15,14 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class CreateGroupResponsePacket extends Packet {
 
     private boolean success;
 
-    private int groupId;
+    private int id;
 
-    private List<String> usernameList;
+    private String name;
 
     @Override
     public Byte getCommand() {

@@ -16,15 +16,13 @@ import com.chanshiyu.chat.util.ValidUtil;
 import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
+import com.chanshiyu.mbg.entity.Group;
 import com.chanshiyu.mbg.entity.Message;
 import com.chanshiyu.mbg.model.vo.Chat;
 import com.chanshiyu.mbg.model.vo.MessageVO;
 import com.chanshiyu.mbg.model.vo.RecentMessage;
 import com.chanshiyu.mbg.model.vo.User;
-import com.chanshiyu.service.IAccountService;
-import com.chanshiyu.service.IBlacklistService;
-import com.chanshiyu.service.IChannelService;
-import com.chanshiyu.service.IMessageService;
+import com.chanshiyu.service.*;
 import com.lmax.disruptor.WorkHandler;
 import io.jsonwebtoken.Claims;
 import io.netty.channel.Channel;
@@ -329,6 +327,24 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         }
         Session session = SessionUtil.getSession(channel);
 
+        IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+        int count = groupService.findCountByCreateUser(session.getUsername());
+        if (count >= 10) {
+            ChatUtil.sendErrorMessage(channel, false, "创建群组数已达最大限制！");
+            return;
+        }
+
+
+        Group group = groupService.create(name, session.getUsername());
+        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket(true, group.getId(), group.getName());
+        channel.writeAndFlush(createGroupResponsePacket);
+
+        // 加入缓存
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, group.getId(), ChatTypeAttributes.GROUP);
+        ChatUtil.addChatHistory(session.getUserId(), chat);
+
+        // 刷新聊天列表
+        refreshChatList(channel);
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
@@ -476,6 +492,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             }
             updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(true, "更新成功！", session.getAvatar(), session.getNickname());
         } catch (Exception e) {
+            e.printStackTrace();
             String errorMsg = e.getMessage();
             if (StringUtils.isBlank(errorMsg)) {
                 errorMsg = "更新失败！";

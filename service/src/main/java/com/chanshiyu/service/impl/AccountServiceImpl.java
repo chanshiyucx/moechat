@@ -39,6 +39,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         Account account = Account.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
+                .nickname(username)
                 .status(AccountAttributes.ACTIVE)
                 .createTime(LocalDateTime.now())
                 .build();

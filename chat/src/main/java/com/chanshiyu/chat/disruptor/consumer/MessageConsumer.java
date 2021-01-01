@@ -12,11 +12,15 @@ import com.chanshiyu.chat.protocol.response.*;
 import com.chanshiyu.chat.session.Session;
 import com.chanshiyu.chat.util.ChatUtil;
 import com.chanshiyu.chat.util.SessionUtil;
+import com.chanshiyu.chat.util.ValidUtil;
 import com.chanshiyu.common.util.JwtUtil;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.entity.Message;
-import com.chanshiyu.mbg.model.vo.*;
+import com.chanshiyu.mbg.model.vo.Chat;
+import com.chanshiyu.mbg.model.vo.MessageVO;
+import com.chanshiyu.mbg.model.vo.RecentMessage;
+import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.IAccountService;
 import com.chanshiyu.service.IBlacklistService;
 import com.chanshiyu.service.IChannelService;
@@ -98,8 +102,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 登录
      */
     private void login(Channel channel, LoginRequestPacket packet) {
-        log.info("before count: {}", SessionUtil.getAllChannels().size());
-
         String ip = channel.attr(ChannelAttributes.IP).get();
         if (StringUtils.isNotBlank(ip)) {
             // ip 黑名单检测
@@ -129,8 +131,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         try {
             if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
                 // 注册或登录流程
-                String regex = "^[a-zA-Z0-9._-]{3,12}$";
-                if (!username.matches(regex) || !password.matches(regex)) {
+                if (!ValidUtil.validNameOrPW(username) || !ValidUtil.validNameOrPW(password)) {
                     log.info("用户名或密码格式错误，username: [{}]，password: [{}]", username, password);
                     ChatUtil.sendErrorMessage(channel, false, "用户名和密码必须为3-12位数字字母下划线组合！");
                     return;
@@ -159,6 +160,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 account = ChatUtil.generateTouristAccount();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             errorMsg = e.getMessage();
         }
         if (account == null) {
@@ -192,8 +194,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 刷新聊天列表
         refreshChatList(channel);
-
-        log.info("after count: {}", SessionUtil.getAllChannels().size());
     }
 
     /**
@@ -322,11 +322,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     }
 
     private void createGroup(Channel channel, CreateGroupRequestPacket packet) {
-        String regex = "^[a-zA-Z0-9._-\\u4e00-\\u9fa5]{3,12}$";
         String name = packet.getName();
-        if (!name.matches(regex)) {
-            log.info("群名称格式错误，name: [{}]", name);
-            ChatUtil.sendErrorMessage(channel, false, "群组名称必须为3-12位数字字母下划线中文组合！");
+        if (!ValidUtil.validContent(name)) {
+            ChatUtil.sendErrorMessage(channel, false, "群组名称必须为1-12位数字字母下划线中文组合！");
             return;
         }
         Session session = SessionUtil.getSession(channel);
@@ -439,7 +437,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 更新用户信息
      */
     private void updateUserInfo(Channel channel, UpdateUserInfoRequestPacket packet) {
-        log.info("UpdateUserInfoRequestPacket: {}", packet);
         Session session = SessionUtil.getSession(channel);
         if (session.isTourist()) {
             UpdateUserInfoResponsePacket updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, "游客无法更新个人信息！", null, null);
@@ -451,6 +448,17 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         String nickname = packet.getNickname();
         String oldPassword = packet.getOldPassword();
         String newPassword = packet.getNewPassword();
+
+        // 验证
+        if (!ValidUtil.validContent(nickname)){
+            ChatUtil.sendErrorMessage(channel, false, "昵称必须为1-12位数字字母下划线中文组合！");
+            return;
+        }
+        if (!ValidUtil.validNameOrPW(newPassword)){
+            ChatUtil.sendErrorMessage(channel, false, "新密码必须为3-12位数字字母下划线组合！");
+            return;
+        }
+
         UpdateUserInfoResponsePacket updateUserInfoResponsePacket;
         try {
             if (StringUtils.isNotBlank(avatar)) {

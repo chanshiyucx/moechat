@@ -23,13 +23,13 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Override
     public Group create(String name, String username) {
-        Group group = Group.builder()
+        Group chat = Group.builder()
                 .name(name)
                 .createUser(username)
                 .createTime(LocalDateTime.now())
                 .build();
-        groupMapper.insert(group);
-        return group;
+        groupMapper.insert(chat);
+        return chat;
     }
 
     @Override
@@ -38,5 +38,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         queryWrapper.eq(Group::getCreateUser, username);
         return groupMapper.selectCount(queryWrapper);
     }
+
 
 }

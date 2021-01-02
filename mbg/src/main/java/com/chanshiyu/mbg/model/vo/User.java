@@ -1,6 +1,9 @@
 package com.chanshiyu.mbg.model.vo;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -10,6 +13,7 @@ import java.util.Date;
  * @since 2020/12/4 16:58
  */
 @Data
+@NoArgsConstructor
 public class User {
 
     private int userId;

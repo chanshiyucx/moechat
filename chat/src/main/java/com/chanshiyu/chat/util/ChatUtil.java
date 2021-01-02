@@ -4,19 +4,22 @@ import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
+import com.chanshiyu.chat.session.Session;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.model.vo.Chat;
+import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.RedisService;
 import io.netty.channel.Channel;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -110,7 +113,7 @@ public class ChatUtil {
     public static List<Chat> getChatHistory(int userId) {
         RedisService redis = getRedis();
         Set<ZSetOperations.TypedTuple<Object>> chatSet = redis.zReverseRangeWithScores(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), 0, -1);
-        return new ArrayList<>(chatSet).stream()
+        return chatSet.stream()
                 .map(bean -> {
                     String value = (String) bean.getValue();
                     Double score = bean.getScore();
@@ -141,6 +144,53 @@ public class ChatUtil {
     public static boolean isChatMember(int userId, String chat) {
         RedisService redis = getRedis();
         return redis.zScore(String.format(RedisAttributes.USER_CHAT_HISTORY, userId), chat) != null;
+    }
+
+    /**
+     * 添加群组成员
+     */
+    public static void addGroupUser(int groupId, int userId) {
+        RedisService redis = getRedis();
+        redis.sAdd(String.format(RedisAttributes.GROUP_USER, groupId), userId);
+    }
+
+    /**
+     * 移除群组成员
+     */
+    public static void removeGroupUser(int groupId, int userId) {
+        RedisService redis = getRedis();
+        redis.sRemove(String.format(RedisAttributes.GROUP_USER, groupId), userId);
+    }
+
+    /**
+     * 是否为群组成员
+     */
+    public static boolean isGroupMember(int groupId, int userId) {
+        RedisService redis = getRedis();
+        return redis.sIsMember(String.format(RedisAttributes.GROUP_USER, groupId), userId);
+    }
+
+    /**
+     * 群组成员列表
+     */
+    public static List<User> getGroupUser(int groupId) {
+        RedisService redis = getRedis();
+        Set<Object> userSet = redis.sMembers(String.format(RedisAttributes.GROUP_USER, groupId));
+        return userSet.stream()
+                .map(bean -> {
+                    String value = (String) bean;
+                    String[] rest = value.split("_");
+                    int userId = Integer.parseInt(rest[2]);
+                    return SessionUtil.getChannel(userId);
+                })
+                .filter(Objects::nonNull)
+                .map(channel -> {
+                    Session session = SessionUtil.getSession(channel);
+                    User user = new User();
+                    BeanUtils.copyProperties(session, user);
+                    return user;
+                })
+                .collect(Collectors.toList());
     }
 
     /**

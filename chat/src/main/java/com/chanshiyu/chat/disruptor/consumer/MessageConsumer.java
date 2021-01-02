@@ -334,41 +334,76 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             return;
         }
 
-
         Group group = groupService.create(name, session.getUsername());
-        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket(true, group.getId(), group.getName());
-        channel.writeAndFlush(createGroupResponsePacket);
 
         // 加入缓存
+        ChatUtil.setNickname(group.getId(), ChatTypeAttributes.GROUP, name);
         String chat = String.format(RedisAttributes.USER_CHAT_ITEM, group.getId(), ChatTypeAttributes.GROUP);
         ChatUtil.addChatHistory(session.getUserId(), chat);
+        ChatUtil.addGroupUser(group.getId(), session.getUserId());
+
+        // 成功响应
+        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket(true, group.getId(), group.getName());
+        channel.writeAndFlush(createGroupResponsePacket);
 
         // 刷新聊天列表
         refreshChatList(channel);
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
-        // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 添加进去
-//        int groupId = packet.getGroupId();
-//        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-//        channelGroup.add(channel);
-//        // 2. 构造加群响应发送给客户端
-//        JoinGroupResponsePacket responsePacket = new JoinGroupResponsePacket();
-//        responsePacket.setSuccess(true);
-//        responsePacket.setGroupId(groupId);
-//        channel.writeAndFlush(responsePacket);
+        IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+        int groupId = packet.getGroupId();
+
+        // 判断群组是否存在
+        Group group = groupService.getById(groupId);
+        if (group == null) {
+            ChatUtil.sendErrorMessage(channel, false, "该群组不存在！");
+            return;
+        }
+
+        // 判断是否在群组中
+        Session session = SessionUtil.getSession(channel);
+        if (ChatUtil.isGroupMember(groupId, session.getUserId())) {
+            ChatUtil.sendErrorMessage(channel, false, "你已在群组中！");
+            return;
+        }
+
+        // 加入缓存
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, groupId, ChatTypeAttributes.GROUP);
+        ChatUtil.addChatHistory(session.getUserId(), chat);
+        ChatUtil.addGroupUser(groupId, session.getUserId());
+
+        // 成功响应
+        JoinGroupResponsePacket joinGroupResponsePacket = new JoinGroupResponsePacket(true, "加入成功");
+        channel.writeAndFlush(joinGroupResponsePacket);
+
+        // 刷新聊天列表
+        refreshChatList(channel);
     }
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
-        // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 移除
-//        int groupId = packet.getGroupId();
-//        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);
-//        channelGroup.remove(channel);
-//        // 2. 构造退群响应发送给客户端
-//        QuitGroupResponsePacket responsePacket = new QuitGroupResponsePacket();
-//        responsePacket.setGroupId(packet.getGroupId());
-//        responsePacket.setSuccess(true);
-//        channel.writeAndFlush(responsePacket);
+        IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+        int groupId = packet.getGroupId();
+
+        // 判断群组是否存在
+        Group group = groupService.getById(groupId);
+        if (group == null) {
+            ChatUtil.sendErrorMessage(channel, false, "该群组不存在！");
+            return;
+        }
+
+        // 加入缓存
+        Session session = SessionUtil.getSession(channel);
+        String chat = String.format(RedisAttributes.USER_CHAT_ITEM, groupId, ChatTypeAttributes.GROUP);
+        ChatUtil.removeChatHistory(session.getUserId(), chat);
+        ChatUtil.removeGroupUser(groupId, session.getUserId());
+
+        // 成功响应
+        QuitGroupResponsePacket quitGroupResponsePacket = new QuitGroupResponsePacket(true, "退出成功");
+        channel.writeAndFlush(quitGroupResponsePacket);
+
+        // 刷新聊天列表
+        refreshChatList(channel);
     }
 
     /**
@@ -388,8 +423,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     })
                     .collect(Collectors.toList());
         } else {
-            // TODO: 群组
-            userList = new ArrayList<>();
+            // 群组
+            userList = ChatUtil.getGroupUser(packet.getId());
         }
         ListMembersResponsePacket listMembersResponsePacket = new ListMembersResponsePacket(packet.getId(), packet.getType(), userList);
         channel.writeAndFlush(listMembersResponsePacket);
@@ -473,7 +508,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 session.setAvatar(avatar);
             } else if (StringUtils.isNotBlank(nickname)) {
                 // 修改昵称
-                if (ValidUtil.validContent(nickname)){
+                if (ValidUtil.validContent(nickname)) {
                     ChatUtil.sendErrorMessage(channel, false, "昵称必须为1-12位数字字母下划线中文组合！");
                     return;
                 }
@@ -481,7 +516,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 session.setNickname(nickname);
             } else if (StringUtils.isNotBlank(oldPassword) && StringUtils.isNotBlank(newPassword)) {
                 // 修改密码
-                if (ValidUtil.validNameOrPW(newPassword)){
+                if (ValidUtil.validNameOrPW(newPassword)) {
                     ChatUtil.sendErrorMessage(channel, false, "新密码必须为3-12位数字字母下划线组合！");
                     return;
                 }

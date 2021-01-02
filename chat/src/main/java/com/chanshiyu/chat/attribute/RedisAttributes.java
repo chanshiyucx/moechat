@@ -28,6 +28,9 @@ public interface RedisAttributes {
     // 用户的聊天记录表
     String USER_CHAT_HISTORY = "CHAT_HISTORY_%d";
 
+    // 群组成员
+    String GROUP_USER = "GROUP_USER_%d";
+
     // 总注册用户
     String TOTAL_REGISTER_USER = "TOTAL_REGISTER_USER";
 

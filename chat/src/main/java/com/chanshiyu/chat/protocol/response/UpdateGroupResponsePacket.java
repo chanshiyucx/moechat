@@ -2,33 +2,33 @@ package com.chanshiyu.chat.protocol.response;
 
 import com.chanshiyu.chat.protocol.Packet;
 import com.chanshiyu.chat.protocol.command.Command;
-import com.chanshiyu.chat.session.Session;
-import com.chanshiyu.mbg.model.vo.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.List;
-
 /**
  * @author SHIYU
- * @description 群成员响应
- * @since 2020/11/10 17:48
+ * @description
+ * @since 2021/1/2 15:31
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-public class ListMembersResponsePacket extends Packet {
+public class UpdateGroupResponsePacket extends Packet {
+
+    private boolean success;
+
+    private String message;
 
     private int id;
 
-    private byte type;
+    private String avatar;
 
-    private List<User> userList;
+    private String name;
 
     @Override
     public Byte getCommand() {
-        return Command.LIST_MEMBERS_RESPONSE;
+        return Command.UPDATE_GROUP_RESPONSE;
     }
 
 }

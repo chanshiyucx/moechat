@@ -121,12 +121,7 @@ public interface RedisService {
     /**
      * 向Set结构中添加属性
      */
-    Long sAdd(String key, Object... values);
-
-    /**
-     * 向Set结构中添加属性
-     */
-    Long sAdd(String key, long time, Object... values);
+    void sAdd(String key, Object... values);
 
     /**
      * 是否为Set中的属性

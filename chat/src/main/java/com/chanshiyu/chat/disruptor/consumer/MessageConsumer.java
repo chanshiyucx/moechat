@@ -78,14 +78,17 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.QUIT_GROUP_REQUEST:
                 quitGroup(channel, (QuitGroupRequestPacket) packet);
                 break;
-            case Command.LIST_MEMBERS_REQUEST:
-                listMembers(channel, (ListMembersRequestPacket) packet);
+            case Command.CHAT_INFO_REQUEST:
+                listMembers(channel, (ChatInfoRequestPacket) packet);
                 break;
             case Command.CHAT_MESSAGE_REQUEST:
                 chatMessage(channel, (ChatMessageRequestPacket) packet);
                 break;
-            case Command.UPDATE_USERINFO_REQUEST:
-                updateUserInfo(channel, (UpdateUserInfoRequestPacket) packet);
+            case Command.UPDATE_USER_REQUEST:
+                updateUser(channel, (UpdateUserRequestPacket) packet);
+                break;
+            case Command.UPDATE_GROUP_REQUEST:
+                updateGroup(channel, (UpdateGroupRequestPacket) packet);
                 break;
             case Command.STATISTICS_REQUEST:
                 statistics(channel);
@@ -191,7 +194,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         log.info("[{}]登录成功", session.getUsername());
 
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, true);
     }
 
     /**
@@ -303,7 +306,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChatUtil.addChatHistory(session.getUserId(), chat);
 
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, false);
     }
 
     /**
@@ -316,7 +319,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         RemoveFriendResponsePacket removeFriendResponsePacket = new RemoveFriendResponsePacket(true, "移除成功！");
         channel.writeAndFlush(removeFriendResponsePacket);
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, false);
     }
 
     private void createGroup(Channel channel, CreateGroupRequestPacket packet) {
@@ -347,7 +350,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(createGroupResponsePacket);
 
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, false);
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
@@ -378,7 +381,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(joinGroupResponsePacket);
 
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, false);
     }
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
@@ -403,16 +406,19 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(quitGroupResponsePacket);
 
         // 刷新聊天列表
-        refreshChatList(channel);
+        refreshChatList(channel, false);
     }
 
     /**
      * 频道和群组成员列表（只显示在线成员）
      */
-    private void listMembers(Channel channel, ListMembersRequestPacket packet) {
+    private void listMembers(Channel channel, ChatInfoRequestPacket packet) {
         List<User> userList;
+        String createUser;
         if (packet.getType() == ChatTypeAttributes.CHANNEL) {
             // 频道
+            IChannelService channelService = SpringUtil.getBean(IChannelService.class);
+            createUser = channelService.getById(packet.getId()).getCreateUser();
             userList = SessionUtil.getAllChannels().stream()
                     .map(SessionUtil::getSession)
                     .filter(session -> !ChatUtil.isTourist(session.getUserId()))
@@ -424,10 +430,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     .collect(Collectors.toList());
         } else {
             // 群组
+            IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+            createUser = groupService.getById(packet.getId()).getCreateUser();
             userList = ChatUtil.getGroupUser(packet.getId());
         }
-        ListMembersResponsePacket listMembersResponsePacket = new ListMembersResponsePacket(packet.getId(), packet.getType(), userList);
-        channel.writeAndFlush(listMembersResponsePacket);
+        ChatInfoResponsePacket chatInfoResponsePacket = new ChatInfoResponsePacket(packet.getId(), packet.getType(), createUser, userList);
+        channel.writeAndFlush(chatInfoResponsePacket);
     }
 
     /**
@@ -442,7 +450,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     /**
      * 刷新聊天列表
      */
-    private void refreshChatList(Channel channel) {
+    private void refreshChatList(Channel channel, boolean pushMessage) {
         List<Chat> list = new ArrayList<>();
         // 世界频道
         IChannelService channelService = SpringUtil.getBean(IChannelService.class);
@@ -458,6 +466,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         channel.writeAndFlush(chatHistoryResponsePacket);
 
         // 推送最近消息
+        if (!pushMessage) return;
         List<RecentMessage> recentMessageList = list.stream()
                 .map(chat -> {
                     List<MessageVO> messageList = getMessageList(chat.getId(), chat.getType(), 0, 10);
@@ -487,20 +496,22 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     /**
      * 更新用户信息
      */
-    private void updateUserInfo(Channel channel, UpdateUserInfoRequestPacket packet) {
+    private void updateUser(Channel channel, UpdateUserRequestPacket packet) {
         Session session = SessionUtil.getSession(channel);
         if (session.isTourist()) {
-            UpdateUserInfoResponsePacket updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, "游客无法更新个人信息！", null, null);
-            channel.writeAndFlush(updateUserInfoResponsePacket);
+            UpdateUserResponsePacket updateUserResponsePacket = new UpdateUserResponsePacket(false, "游客无法更新个人信息！", null, null);
+            channel.writeAndFlush(updateUserResponsePacket);
             return;
         }
+
         int userId = session.getUserId();
         String avatar = packet.getAvatar();
         String nickname = packet.getNickname();
         String oldPassword = packet.getOldPassword();
         String newPassword = packet.getNewPassword();
 
-        UpdateUserInfoResponsePacket updateUserInfoResponsePacket;
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+        UpdateUserResponsePacket updateUserResponsePacket;
         try {
             if (StringUtils.isNotBlank(avatar)) {
                 // 修改头像
@@ -512,6 +523,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     ChatUtil.sendErrorMessage(channel, false, "昵称必须为1-12位数字字母下划线中文组合！");
                     return;
                 }
+                Account account = accountService.getById(userId);
+                account.setNickname(nickname);
+                accountService.updateById(account);
                 ChatUtil.setNickname(userId, ChatTypeAttributes.USER, nickname);
                 session.setNickname(nickname);
             } else if (StringUtils.isNotBlank(oldPassword) && StringUtils.isNotBlank(newPassword)) {
@@ -520,19 +534,68 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     ChatUtil.sendErrorMessage(channel, false, "新密码必须为3-12位数字字母下划线组合！");
                     return;
                 }
-                IAccountService accountService = SpringUtil.getBean(IAccountService.class);
                 accountService.updatePassword(userId, oldPassword, newPassword);
             }
-            updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(true, "更新成功！", session.getAvatar(), session.getNickname());
+            updateUserResponsePacket = new UpdateUserResponsePacket(true, "更新成功！", session.getAvatar(), session.getNickname());
         } catch (Exception e) {
             e.printStackTrace();
             String errorMsg = e.getMessage();
             if (StringUtils.isBlank(errorMsg)) {
                 errorMsg = "更新失败！";
             }
-            updateUserInfoResponsePacket = new UpdateUserInfoResponsePacket(false, errorMsg, null, null);
+            updateUserResponsePacket = new UpdateUserResponsePacket(false, errorMsg, null, null);
         }
-        channel.writeAndFlush(updateUserInfoResponsePacket);
+        channel.writeAndFlush(updateUserResponsePacket);
+    }
+
+    /**
+     * 更新群组信息
+     */
+    private void updateGroup(Channel channel, UpdateGroupRequestPacket packet) {
+        int groupId = packet.getId();
+        String avatar = packet.getAvatar();
+        String name = packet.getName();
+
+        // 判断群组是否存在
+        IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+        Group group = groupService.getById(groupId);
+        if (group == null) {
+            ChatUtil.sendErrorMessage(channel, false, "该群组不存在！");
+            return;
+        }
+
+        // 判断是否为群组创建者
+        Session session = SessionUtil.getSession(channel);
+        if (!group.getCreateUser().equals(session.getUsername())) {
+            ChatUtil.sendErrorMessage(channel, false, "无权更新群组信息！");
+            return;
+        }
+
+        UpdateGroupResponsePacket updateGroupResponsePacket;
+        try {
+            if (StringUtils.isNotBlank(avatar)) {
+                // 修改头像
+                ChatUtil.setAvatar(groupId, ChatTypeAttributes.GROUP, avatar);
+            } else if (StringUtils.isNotBlank(name)) {
+                // 修改昵称
+                if (ValidUtil.validContent(name)) {
+                    ChatUtil.sendErrorMessage(channel, false, "群名称必须为1-12位数字字母下划线中文组合！");
+                    return;
+                }
+                group.setName(name);
+                groupService.updateById(group);
+                ChatUtil.setNickname(groupId, ChatTypeAttributes.GROUP, name);
+            }
+            updateGroupResponsePacket = new UpdateGroupResponsePacket(true, "更新成功！", groupId, avatar, name);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorMsg = e.getMessage();
+            if (StringUtils.isBlank(errorMsg)) {
+                errorMsg = "更新失败！";
+            }
+            updateGroupResponsePacket = new UpdateGroupResponsePacket(false, errorMsg, groupId, null, null);
+        }
+        channel.writeAndFlush(updateGroupResponsePacket);
     }
 
     /**

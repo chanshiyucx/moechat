@@ -178,9 +178,7 @@ public class ChatUtil {
         Set<Object> userSet = redis.sMembers(String.format(RedisAttributes.GROUP_USER, groupId));
         return userSet.stream()
                 .map(bean -> {
-                    String value = (String) bean;
-                    String[] rest = value.split("_");
-                    int userId = Integer.parseInt(rest[2]);
+                    int userId = (int) bean;
                     return SessionUtil.getChannel(userId);
                 })
                 .filter(Objects::nonNull)

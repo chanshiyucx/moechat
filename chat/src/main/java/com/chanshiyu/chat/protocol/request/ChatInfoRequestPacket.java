@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ListMembersRequestPacket extends Packet {
+public class ChatInfoRequestPacket extends Packet {
 
     private int id;
 
@@ -20,7 +20,7 @@ public class ListMembersRequestPacket extends Packet {
 
     @Override
     public Byte getCommand() {
-        return Command.LIST_MEMBERS_REQUEST;
+        return Command.CHAT_INFO_REQUEST;
     }
 
 }

@@ -59,8 +59,8 @@ public class PacketCodec {
         packetTypeMap.put(Command.QUIT_GROUP_REQUEST, QuitGroupRequestPacket.class);
         packetTypeMap.put(Command.QUIT_GROUP_RESPONSE, QuitGroupResponsePacket.class);
         // 群聊成员
-        packetTypeMap.put(Command.LIST_MEMBERS_REQUEST, ListMembersRequestPacket.class);
-        packetTypeMap.put(Command.LIST_MEMBERS_RESPONSE, ListMembersResponsePacket.class);
+        packetTypeMap.put(Command.CHAT_INFO_REQUEST, ChatInfoRequestPacket.class);
+        packetTypeMap.put(Command.CHAT_INFO_RESPONSE, ChatInfoResponsePacket.class);
         // 聊天列表
         packetTypeMap.put(Command.CHAT_HISTORY_REQUEST, ChatHistoryRequestPacket.class);
         packetTypeMap.put(Command.CHAT_HISTORY_RESPONSE, ChatHistoryResponsePacket.class);
@@ -71,8 +71,11 @@ public class PacketCodec {
         packetTypeMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestPacket.class);
         packetTypeMap.put(Command.CHAT_MESSAGE_RESPONSE, ChatMessageResponsePacket.class);
         // 更新用户信息
-        packetTypeMap.put(Command.UPDATE_USERINFO_REQUEST, UpdateUserInfoRequestPacket.class);
-        packetTypeMap.put(Command.UPDATE_USERINFO_RESPONSE, UpdateUserInfoResponsePacket.class);
+        packetTypeMap.put(Command.UPDATE_USER_REQUEST, UpdateUserRequestPacket.class);
+        packetTypeMap.put(Command.UPDATE_USER_RESPONSE, UpdateUserResponsePacket.class);
+        // 更新群组信息
+        packetTypeMap.put(Command.UPDATE_GROUP_REQUEST, UpdateGroupRequestPacket.class);
+        packetTypeMap.put(Command.UPDATE_GROUP_RESPONSE, UpdateGroupResponsePacket.class);
         // 统计分析
         packetTypeMap.put(Command.STATISTICS_REQUEST, StatisticsRequestPacket.class);
         packetTypeMap.put(Command.STATISTICS_RESPONSE, StatisticsResponsePacket.class);

@@ -8,24 +8,21 @@ import lombok.EqualsAndHashCode;
 /**
  * @author SHIYU
  * @description
- * @since 2020/12/28 14:38
+ * @since 2021/1/2 15:30
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UpdateUserInfoRequestPacket extends Packet {
+public class UpdateGroupRequestPacket extends Packet {
+
+    private int id;
 
     private String avatar;
 
-    private String nickname;
-
-    private String oldPassword;
-
-    private String newPassword;
+    private String name;
 
     @Override
     public Byte getCommand() {
-        return Command.UPDATE_USERINFO_REQUEST;
+        return Command.UPDATE_GROUP_REQUEST;
     }
 
 }
-

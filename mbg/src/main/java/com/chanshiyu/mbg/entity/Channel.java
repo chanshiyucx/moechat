@@ -42,7 +42,7 @@ public class Channel implements Serializable {
     private Integer status;
 
     @ApiModelProperty(value = "创建者")
-    private Integer createUser;
+    private String createUser;
 
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;

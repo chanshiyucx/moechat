@@ -63,8 +63,8 @@ public interface Command {
     /**
      * 频道和群组成员
      */
-    byte LIST_MEMBERS_REQUEST = 19;
-    byte LIST_MEMBERS_RESPONSE = 20;
+    byte CHAT_INFO_REQUEST = 19;
+    byte CHAT_INFO_RESPONSE = 20;
 
     /**
      * 聊天列表
@@ -87,14 +87,20 @@ public interface Command {
     /**
      * 更新用户信息
      */
-    byte UPDATE_USERINFO_REQUEST = 27;
-    byte UPDATE_USERINFO_RESPONSE = 28;
+    byte UPDATE_USER_REQUEST = 27;
+    byte UPDATE_USER_RESPONSE = 28;
+
+    /**
+     * 更新群组信息
+     */
+    byte UPDATE_GROUP_REQUEST = 29;
+    byte UPDATE_GROUP_RESPONSE = 30;
 
     /**
      * 统计分析
      */
-    byte STATISTICS_REQUEST = 29;
-    byte STATISTICS_RESPONSE = 30;
+    byte STATISTICS_REQUEST = 31;
+    byte STATISTICS_RESPONSE = 32;
 
     /**
      * 消息发送成功

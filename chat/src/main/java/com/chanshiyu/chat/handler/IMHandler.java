@@ -35,6 +35,7 @@ public class IMHandler extends SimpleChannelInboundHandler<Packet> {
         handlerMap.put(Command.CHAT_MESSAGE_REQUEST, ChatMessageRequestHandler.INSTANCE);
         handlerMap.put(Command.UPDATE_USER_REQUEST, UpdateUserRequestHandler.INSTANCE);
         handlerMap.put(Command.UPDATE_GROUP_REQUEST, UpdateGroupRequestHandler.INSTANCE);
+        handlerMap.put(Command.SEARCH_REQUEST, SearchRequestHandler.INSTANCE);
         handlerMap.put(Command.STATISTICS_REQUEST, StatisticsRequestHandler.INSTANCE);
     }
 

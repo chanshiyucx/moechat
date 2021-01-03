@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author SHIYU
@@ -37,6 +38,13 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         LambdaQueryWrapper<Group> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Group::getCreateUser, username);
         return groupMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public List<Group> search(String keyword) {
+        LambdaQueryWrapper<Group> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(Group::getName, keyword);
+        return groupMapper.selectList(queryWrapper);
     }
 
 

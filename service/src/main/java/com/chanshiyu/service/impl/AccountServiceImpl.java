@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author SHIYU
@@ -67,6 +68,13 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         }
         account.setPassword(passwordEncoder.encode(newPassword));
         accountMapper.updateById(account);
+    }
+
+    @Override
+    public List<Account> search(String keyword) {
+        LambdaQueryWrapper<Account> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(Account::getNickname, keyword);
+        return accountMapper.selectList(queryWrapper);
     }
 
 }

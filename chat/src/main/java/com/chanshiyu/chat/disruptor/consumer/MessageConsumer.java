@@ -91,6 +91,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             case Command.UPDATE_GROUP_REQUEST:
                 updateGroup(channel, (UpdateGroupRequestPacket) packet);
                 break;
+            case Command.SEARCH_REQUEST:
+                search(channel, (SearchRequestPacket) packet);
+                break;
             case Command.STATISTICS_REQUEST:
                 statistics(channel);
                 break;
@@ -413,7 +416,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 }
             });
             ChatUtil.removeGroup(groupId);
-
+            groupService.removeById(groupId);
         } else {
             // 退出群组
             ChatUtil.removeChatHistory(session.getUserId(), chat);
@@ -626,6 +629,38 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             updateGroupResponsePacket = new UpdateGroupResponsePacket(false, errorMsg, groupId, null, null);
         }
         channel.writeAndFlush(updateGroupResponsePacket);
+    }
+
+    /**
+     * 搜索
+     */
+    private void search(Channel channel, SearchRequestPacket packet) {
+        String keyword = packet.getKeyword();
+        if (StringUtils.isBlank(keyword)) return;
+
+        // 搜索群组
+        IGroupService groupService = SpringUtil.getBean(IGroupService.class);
+        List<Group> groupList = groupService.search(keyword);
+
+        // 搜索用户
+        IAccountService accountService = SpringUtil.getBean(IAccountService.class);
+        List<Account> accountList = accountService.search(keyword);
+
+        // 组装聊天列表
+        List<Chat> chatList = new ArrayList<>();
+        groupList.forEach(group -> {
+            String avatar = ChatUtil.getAvatar(group.getId(), ChatTypeAttributes.GROUP);
+            Chat chat = new Chat(group.getId(), ChatTypeAttributes.GROUP, group.getName(), avatar, null);
+            chatList.add(chat);
+        });
+        accountList.forEach(account -> {
+            String avatar = ChatUtil.getAvatar(account.getId(), ChatTypeAttributes.USER);
+            Chat chat = new Chat(account.getId(), ChatTypeAttributes.USER, account.getNickname(), avatar, null);
+            chatList.add(chat);
+        });
+
+        SearchResponsePacket searchResponsePacket = new SearchResponsePacket(chatList);
+        channel.writeAndFlush(searchResponsePacket);
     }
 
     /**

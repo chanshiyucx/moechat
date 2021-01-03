@@ -3,6 +3,8 @@ package com.chanshiyu.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.chanshiyu.mbg.entity.Account;
 
+import java.util.List;
+
 /**
  * @author SHIYU
  * @since 2020-11-15
@@ -28,5 +30,10 @@ public interface IAccountService extends IService<Account> {
      * 更新密码
      */
     void updatePassword(int id, String oldPassword, String newPassword);
+
+    /**
+     * 根据关键字查找用户
+     */
+    List<Account> search(String keyword);
 
 }

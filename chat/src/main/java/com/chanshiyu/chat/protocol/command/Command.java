@@ -97,10 +97,16 @@ public interface Command {
     byte UPDATE_GROUP_RESPONSE = 30;
 
     /**
+     * 搜索
+     */
+    byte SEARCH_REQUEST = 31;
+    byte SEARCH_RESPONSE = 32;
+
+    /**
      * 统计分析
      */
-    byte STATISTICS_REQUEST = 31;
-    byte STATISTICS_RESPONSE = 32;
+    byte STATISTICS_REQUEST = 33;
+    byte STATISTICS_RESPONSE = 34;
 
     /**
      * 消息发送成功

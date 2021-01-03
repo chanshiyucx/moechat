@@ -76,6 +76,9 @@ public class PacketCodec {
         // 更新群组信息
         packetTypeMap.put(Command.UPDATE_GROUP_REQUEST, UpdateGroupRequestPacket.class);
         packetTypeMap.put(Command.UPDATE_GROUP_RESPONSE, UpdateGroupResponsePacket.class);
+        // 搜素
+        packetTypeMap.put(Command.SEARCH_REQUEST, SearchRequestPacket.class);
+        packetTypeMap.put(Command.SEARCH_RESPONSE, SearchResponsePacket.class);
         // 统计分析
         packetTypeMap.put(Command.STATISTICS_REQUEST, StatisticsRequestPacket.class);
         packetTypeMap.put(Command.STATISTICS_RESPONSE, StatisticsResponsePacket.class);

@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -232,7 +233,23 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 });
                 break;
             case ChatTypeAttributes.GROUP:
-                // TODO：判断是否在存在群组并且用户在群组中
+                // 群组
+                AtomicBoolean isMember = new AtomicBoolean(false);
+                ChatUtil.getGroupUser(packet.getReceiver()).forEach(bean -> {
+                    int userId = (int) bean;
+                    Channel ch = SessionUtil.getChannel(userId);
+                    if (ch != null) {
+                        if (ch == channel) {
+                            isMember.set(true);
+                        } else {
+                            channelGroup.add(ch);
+                        }
+                    }
+                });
+                if (!isMember.get()) {
+                    ChatUtil.sendErrorMessage(channel, false, "请先加入群组！");
+                    return;
+                }
                 break;
             case ChatTypeAttributes.USER:
                 // 判断是否存在用户

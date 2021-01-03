@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -79,7 +80,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                 quitGroup(channel, (QuitGroupRequestPacket) packet);
                 break;
             case Command.CHAT_INFO_REQUEST:
-                listMembers(channel, (ChatInfoRequestPacket) packet);
+                chatInfo(channel, (ChatInfoRequestPacket) packet);
                 break;
             case Command.CHAT_MESSAGE_REQUEST:
                 chatMessage(channel, (ChatMessageRequestPacket) packet);
@@ -386,7 +387,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
         IGroupService groupService = SpringUtil.getBean(IGroupService.class);
-        int groupId = packet.getGroupId();
+        int groupId = packet.getId();
 
         // 判断群组是否存在
         Group group = groupService.getById(groupId);
@@ -397,22 +398,39 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 加入缓存
         Session session = SessionUtil.getSession(channel);
+        String username = session.getUsername();
         String chat = String.format(RedisAttributes.USER_CHAT_ITEM, groupId, ChatTypeAttributes.GROUP);
-        ChatUtil.removeChatHistory(session.getUserId(), chat);
-        ChatUtil.removeGroupUser(groupId, session.getUserId());
+
+        if (username.equals(group.getCreateUser())) {
+            // 解散群组
+            ChatUtil.getGroupUser(packet.getId()).forEach(bean -> {
+                int userId = (int) bean;
+                ChatUtil.removeChatHistory(userId, chat);
+                // 刷新聊天列表
+                Channel ch = SessionUtil.getChannel(userId);
+                if (ch != null) {
+                    refreshChatList(ch, false);
+                }
+            });
+            ChatUtil.removeGroup(groupId);
+
+        } else {
+            // 退出群组
+            ChatUtil.removeChatHistory(session.getUserId(), chat);
+            ChatUtil.removeGroupUser(groupId, session.getUserId());
+            // 刷新聊天列表
+            refreshChatList(channel, false);
+        }
 
         // 成功响应
-        QuitGroupResponsePacket quitGroupResponsePacket = new QuitGroupResponsePacket(true, "退出成功");
+        QuitGroupResponsePacket quitGroupResponsePacket = new QuitGroupResponsePacket(true, "操作成功");
         channel.writeAndFlush(quitGroupResponsePacket);
-
-        // 刷新聊天列表
-        refreshChatList(channel, false);
     }
 
     /**
      * 频道和群组成员列表（只显示在线成员）
      */
-    private void listMembers(Channel channel, ChatInfoRequestPacket packet) {
+    private void chatInfo(Channel channel, ChatInfoRequestPacket packet) {
         List<User> userList;
         String createUser;
         if (packet.getType() == ChatTypeAttributes.CHANNEL) {
@@ -432,7 +450,19 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             // 群组
             IGroupService groupService = SpringUtil.getBean(IGroupService.class);
             createUser = groupService.getById(packet.getId()).getCreateUser();
-            userList = ChatUtil.getGroupUser(packet.getId());
+            userList = ChatUtil.getGroupUser(packet.getId()).stream()
+                    .map(bean -> {
+                        int userId = (int) bean;
+                        return SessionUtil.getChannel(userId);
+                    })
+                    .filter(Objects::nonNull)
+                    .map(ch -> {
+                        Session session = SessionUtil.getSession(ch);
+                        User user = new User();
+                        BeanUtils.copyProperties(session, user);
+                        return user;
+                    })
+                    .collect(Collectors.toList());
         }
         ChatInfoResponsePacket chatInfoResponsePacket = new ChatInfoResponsePacket(packet.getId(), packet.getType(), createUser, userList);
         channel.writeAndFlush(chatInfoResponsePacket);

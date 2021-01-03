@@ -2,16 +2,14 @@ package com.chanshiyu.chat.util;
 
 import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.chanshiyu.chat.attribute.ChatTypeAttributes;
 import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
-import com.chanshiyu.chat.session.Session;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.model.vo.Chat;
-import com.chanshiyu.mbg.model.vo.User;
 import com.chanshiyu.service.RedisService;
 import io.netty.channel.Channel;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.time.Instant;
@@ -19,7 +17,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -163,6 +160,16 @@ public class ChatUtil {
     }
 
     /**
+     * 移除群组
+     */
+    public static void removeGroup(int groupId) {
+        RedisService redis = getRedis();
+        redis.del(String.format(RedisAttributes.GROUP_USER, groupId));
+        redis.del(String.format(RedisAttributes.AVATAR, groupId, ChatTypeAttributes.GROUP));
+        redis.del(String.format(RedisAttributes.NICKNAME, groupId, ChatTypeAttributes.GROUP));
+    }
+
+    /**
      * 是否为群组成员
      */
     public static boolean isGroupMember(int groupId, int userId) {
@@ -173,22 +180,9 @@ public class ChatUtil {
     /**
      * 群组成员列表
      */
-    public static List<User> getGroupUser(int groupId) {
+    public static Set<Object> getGroupUser(int groupId) {
         RedisService redis = getRedis();
-        Set<Object> userSet = redis.sMembers(String.format(RedisAttributes.GROUP_USER, groupId));
-        return userSet.stream()
-                .map(bean -> {
-                    int userId = (int) bean;
-                    return SessionUtil.getChannel(userId);
-                })
-                .filter(Objects::nonNull)
-                .map(channel -> {
-                    Session session = SessionUtil.getSession(channel);
-                    User user = new User();
-                    BeanUtils.copyProperties(session, user);
-                    return user;
-                })
-                .collect(Collectors.toList());
+        return redis.sMembers(String.format(RedisAttributes.GROUP_USER, groupId));
     }
 
     /**

@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class QuitGroupRequestPacket extends Packet {
 
-    private int groupId;
+    private int id;
 
     @Override
     public Byte getCommand() {

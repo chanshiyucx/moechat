@@ -370,12 +370,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChatUtil.addChatHistory(session.getUserId(), chat);
         ChatUtil.addGroupUser(group.getId(), session.getUserId());
 
-        // 成功响应
-        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket(true, group.getId(), group.getName());
-        channel.writeAndFlush(createGroupResponsePacket);
-
         // 刷新聊天列表
         refreshChatList(channel, false);
+
+        // 成功响应
+        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket(true, "创建成功", group.getId(), group.getName());
+        channel.writeAndFlush(createGroupResponsePacket);
     }
 
     private void joinGroup(Channel channel, JoinGroupRequestPacket packet) {
@@ -496,7 +496,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 历史消息
      */
     private void chatMessage(Channel channel, ChatMessageRequestPacket packet) {
-        List<MessageVO> messageList = getMessageList(packet.getId(), packet.getType(), packet.getIndex(), 20);
+        Session session = SessionUtil.getSession(channel);
+        List<MessageVO> messageList = getMessageList(session.getUserId(), packet.getId(), packet.getType(), packet.getIndex(), 20);
         ChatMessageResponsePacket chatMessageResponsePacket = new ChatMessageResponsePacket(packet.getId(), packet.getType(), messageList);
         channel.writeAndFlush(chatMessageResponsePacket);
     }
@@ -523,7 +524,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         if (!pushMessage) return;
         List<RecentMessage> recentMessageList = list.stream()
                 .map(chat -> {
-                    List<MessageVO> messageList = getMessageList(chat.getId(), chat.getType(), 0, 10);
+                    List<MessageVO> messageList = getMessageList(session.getUserId(), chat.getId(), chat.getType(), 0, 10);
                     return new RecentMessage(chat.getId(), chat.getType(), messageList);
                 })
                 .collect(Collectors.toList());
@@ -534,9 +535,14 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     /**
      * 查询消息列表
      */
-    private List<MessageVO> getMessageList(int receiver, byte type, int index, int size) {
+    private List<MessageVO> getMessageList(int sender, int receiver, byte type, int index, int size) {
         IMessageService messageService = SpringUtil.getBean(IMessageService.class);
-        List<Message> messageList = messageService.getMessageList(receiver, type, index, size);
+        List<Message> messageList;
+        if (type == ChatTypeAttributes.USER) {
+            messageList = messageService.getUserMessage(sender, receiver, type, index, size);
+        } else {
+            messageList = messageService.getGroupMessage(receiver, type, index, size);
+        }
         return messageList.stream()
                 .map(message -> {
                     MessageVO messageVO = new MessageVO();

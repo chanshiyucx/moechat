@@ -20,7 +20,9 @@ public class CreateGroupResponsePacket extends Packet {
 
     private boolean success;
 
-    private int id;
+    private String message;
+
+    private int groupId;
 
     private String name;
 

@@ -12,8 +12,13 @@ import java.util.List;
 public interface IMessageService extends IService<Message> {
 
     /**
-     * 获取消息列表
+     * 获取频道/群组消息列表
      */
-    List<Message> getMessageList(int receiver, byte type, int index, int size);
+    List<Message> getGroupMessage(int receiver, byte type, int index, int size);
+
+    /**
+     * 获取用户消息列表
+     */
+    List<Message> getUserMessage(int sender, int receiver, byte type, int index, int size);
 
 }

@@ -697,7 +697,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
      * 统计分析
      */
     private void statistics(Channel channel) {
-        final String startDate = "2020-12-01";
+        final String startDate = "2021-01-01";
         long totalRegisterUser = ChatUtil.getTotalRegisterUser();
         long todayRegisterUser = ChatUtil.getTodayRegisterUser();
         long totalSendMessage = ChatUtil.getTotalSendMessage();

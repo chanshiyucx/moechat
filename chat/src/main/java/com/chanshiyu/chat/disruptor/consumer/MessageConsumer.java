@@ -326,8 +326,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         // 存入缓存
         ChatUtil.addChatHistory(session.getUserId(), chat);
 
-        // 刷新聊天列表
+        // 刷新聊天列表【先刷新聊天列表，方便前端重置当前会话】
         refreshChatList(channel, false);
+
+        // 成功响应
+        AddFriendResponsePacket addFriendResponsePacket = new AddFriendResponsePacket(true, "添加成功", account.getId());
+        channel.writeAndFlush(addFriendResponsePacket);
     }
 
     /**
@@ -397,12 +401,12 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         ChatUtil.addChatHistory(session.getUserId(), chat);
         ChatUtil.addGroupUser(groupId, session.getUserId());
 
-        // 成功响应
-        JoinGroupResponsePacket joinGroupResponsePacket = new JoinGroupResponsePacket(true, "加入成功");
-        channel.writeAndFlush(joinGroupResponsePacket);
-
-        // 刷新聊天列表
+        // 刷新聊天列表【先刷新聊天列表，方便前端重置当前会话】
         refreshChatList(channel, false);
+
+        // 成功响应
+        JoinGroupResponsePacket joinGroupResponsePacket = new JoinGroupResponsePacket(true, "加入成功", groupId);
+        channel.writeAndFlush(joinGroupResponsePacket);
     }
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {

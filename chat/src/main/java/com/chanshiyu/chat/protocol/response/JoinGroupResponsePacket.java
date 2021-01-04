@@ -20,6 +20,8 @@ public class JoinGroupResponsePacket extends Packet {
 
     private String message;
 
+    private int groupId;
+
     @Override
     public Byte getCommand() {
         return Command.JOIN_GROUP_RESPONSE;

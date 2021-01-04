@@ -312,7 +312,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         String chat = String.format(RedisAttributes.USER_CHAT_ITEM, packet.getUserId(), ChatTypeAttributes.USER);
         boolean isMember = ChatUtil.isChatMember(session.getUserId(), chat);
         if (isMember) {
-            ChatUtil.sendErrorMessage(channel, false, "该用户已添加！");
+            ChatUtil.sendErrorMessage(channel, false, "该用户已在好友列表中！");
             return;
         }
 
@@ -407,7 +407,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
     private void quitGroup(Channel channel, QuitGroupRequestPacket packet) {
         IGroupService groupService = SpringUtil.getBean(IGroupService.class);
-        int groupId = packet.getId();
+        int groupId = packet.getGroupId();
 
         // 判断群组是否存在
         Group group = groupService.getById(groupId);
@@ -423,7 +423,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         if (username.equals(group.getCreateUser())) {
             // 解散群组
-            ChatUtil.getGroupUser(packet.getId()).forEach(bean -> {
+            ChatUtil.getGroupUser(groupId).forEach(bean -> {
                 int userId = (int) bean;
                 ChatUtil.removeChatHistory(userId, chat);
                 // 刷新聊天列表
@@ -654,6 +654,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
     private void search(Channel channel, SearchRequestPacket packet) {
         String keyword = packet.getKeyword();
         if (StringUtils.isBlank(keyword)) return;
+        Session session = SessionUtil.getSession(channel);
 
         // 搜索群组
         IGroupService groupService = SpringUtil.getBean(IGroupService.class);
@@ -671,6 +672,8 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
             chatList.add(chat);
         });
         accountList.forEach(account -> {
+            // 用户过滤自己
+            if (account.getId() == session.getUserId()) return;
             String avatar = ChatUtil.getAvatar(account.getId(), ChatTypeAttributes.USER);
             Chat chat = new Chat(account.getId(), ChatTypeAttributes.USER, account.getNickname(), avatar, null);
             chatList.add(chat);

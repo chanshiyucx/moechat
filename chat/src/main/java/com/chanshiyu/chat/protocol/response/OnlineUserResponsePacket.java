@@ -6,27 +6,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author SHIYU
  * @description
- * @since 2020/11/21 10:58
+ * @since 2021/1/5 9:38
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-public class MessageSuccessPacket extends Packet {
+public class OnlineUserResponsePacket extends Packet {
 
-    private boolean success;
-
-    private String message;
-
-    private int id;
-
-    private int index;
+    List<Integer> onlineUser;
 
     @Override
     public Byte getCommand() {
-        return Command.MESSAGE_SUCCESS_RESPONSE;
+        return Command.ONLINE_USER_RESPONSE;
     }
 
 }

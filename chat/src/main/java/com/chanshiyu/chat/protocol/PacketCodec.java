@@ -86,6 +86,8 @@ public class PacketCodec {
         packetTypeMap.put(Command.MESSAGE_SUCCESS_RESPONSE, MessageSuccessPacket.class);
         // 错误响应消息
         packetTypeMap.put(Command.ERROR_OPERATION_RESPONSE, ErrorOperationResponsePacket.class);
+        // 在线用户
+        packetTypeMap.put(Command.ONLINE_USER_RESPONSE, OnlineUserResponsePacket.class);
 
         serializerMap = new HashMap<>();
         serializerMap.put(serializer.getSerializerAlgorithm(), serializer);

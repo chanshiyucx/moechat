@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.chanshiyu.chat.attribute.ChatTypeAttributes;
 import com.chanshiyu.chat.attribute.RedisAttributes;
 import com.chanshiyu.chat.protocol.response.ErrorOperationResponsePacket;
+import com.chanshiyu.chat.protocol.response.OnlineUserResponsePacket;
+import com.chanshiyu.chat.session.Session;
 import com.chanshiyu.common.util.SpringUtil;
 import com.chanshiyu.mbg.entity.Account;
 import com.chanshiyu.mbg.model.vo.Chat;
@@ -248,10 +250,20 @@ public class ChatUtil {
     }
 
     /**
-     * 发送消息并入库
+     * 在线用户通知
      */
-    public static void saveAndSendMessage() {
-
+    public static void onlineNotice(Channel channel) {
+        Session session = SessionUtil.getSession(channel);
+        if (!session.isTourist()) {
+            List<Chat> chatList = ChatUtil.getChatHistory(session.getUserId());
+            List<Integer> onlineUser = chatList.stream()
+                    .filter(chat -> chat.getType() == ChatTypeAttributes.USER)
+                    .filter(chat -> SessionUtil.getChannel(chat.getId()) != null)
+                    .map(Chat::getId)
+                    .collect(Collectors.toList());
+            OnlineUserResponsePacket onlineUserResponsePacket = new OnlineUserResponsePacket(onlineUser);
+            channel.writeAndFlush(onlineUserResponsePacket);
+        }
     }
 
 }

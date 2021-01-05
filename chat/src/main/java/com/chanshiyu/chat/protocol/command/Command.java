@@ -118,4 +118,9 @@ public interface Command {
      */
     byte ERROR_OPERATION_RESPONSE = 102;
 
+    /**
+     * 在线好友
+     */
+    byte ONLINE_USER_RESPONSE = 103;
+
 }

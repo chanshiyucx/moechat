@@ -200,6 +200,9 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
 
         // 刷新聊天列表
         refreshChatList(channel, true);
+
+        // 在线用户
+        ChatUtil.onlineNotice(channel);
     }
 
     /**
@@ -258,7 +261,6 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
                     ChatUtil.sendErrorMessage(channel, false, "该用户不存在！");
                     return;
                 }
-                // TODO：是否为好友
                 Channel ch = SessionUtil.getChannel(packet.getReceiver());
                 if (ch != null) {
                     channelGroup.add(ch);
@@ -282,7 +284,7 @@ public class MessageConsumer implements WorkHandler<TranslatorDataWrapper> {
         messageService.save(message);
 
         // 发送成功响应
-        MessageSuccessPacket messageSuccessPacket = new MessageSuccessPacket(message.getId(), packet.getIndex(), true, "发送成功");
+        MessageSuccessPacket messageSuccessPacket = new MessageSuccessPacket(true, "发送成功", message.getId(), packet.getIndex());
         channel.writeAndFlush(messageSuccessPacket);
 
         ChatUtil.incrSendMessage();
